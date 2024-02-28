@@ -1,1 +1,5 @@
 /data/
+/clevr/Dataset Generation/clevr_old_image_generation/
+/.idea/deployment.xml
+/clevr/Dataset Generation/data/
+/clevr/clevr-dataset-gen/
