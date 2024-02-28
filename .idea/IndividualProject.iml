@@ -6,8 +6,9 @@
       <excludeFolder url="file://$MODULE_DIR$/clevr/Dataset Generation/clevr_old_image_generation" />
       <excludeFolder url="file://$MODULE_DIR$/clevr/clevr-dataset-gen" />
       <excludeFolder url="file://$MODULE_DIR$/data" />
+      <excludeFolder url="file://$MODULE_DIR$/venv" />
     </content>
-    <orderEntry type="inheritedJdk" />
+    <orderEntry type="jdk" jdkName="Python 3.10 (IndividualProject)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
 </module>
