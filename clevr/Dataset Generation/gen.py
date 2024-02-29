@@ -156,7 +156,7 @@ class Render:
         bpy.ops.wm.read_factory_settings()
 
     @staticmethod
-    def set_render_args(engine="CYCLES", resolution=(480, 320), samples=128, use_gpu=True):
+    def set_render_args(engine="CYCLES", resolution=(480 * 2, 320 * 2), samples=128, use_gpu=True):
         bpy.context.scene.render.engine = engine
         bpy.context.scene.render.resolution_x = resolution[0]
         bpy.context.scene.render.resolution_y = resolution[1]
@@ -189,6 +189,10 @@ class Render:
     @staticmethod
     def list_materials():
         return bpy.data.materials
+
+    @staticmethod
+    def get_material(name):
+        return bpy.data.materials.get(name)
 
     @staticmethod
     def print_objects():

@@ -171,10 +171,59 @@ class DatasetGeneration(unittest.TestCase):
         logger.info(f"Objects after unloaded: {render.list_object_names()}")
 
         logger.info("Start second round render:")
+        render.get_material(mtl_name).diffuse_color = (1, 0, 0, 1)
         render.load_object(os.path.abspath(object_blend))
         render.apply_material(obj_name, mtl_name)
         render.offset_object_location(obj_name, (1, 1, 1))
         image_path = os.path.join(runtime_path, "output-2.png")
+        render.set_render_output(image_path)
+        render.render_scene()
+        self.assertEqual(True, True)
+
+    def test_duplicate_and_change_color_for_mtl(self):
+        runtime_path = os.path.abspath(os.getcwd())
+        scene_blend = 'data/base_scene.blend'
+        object_blend = 'data/shapes/SmoothCube_v2.blend'
+        # mtl_blend = 'data/materials/Rubber.blend'
+
+        mtl_name = 'BMD_Rubber_0004'
+        mtl_name = 'Material'
+        obj_name = 'SmoothCube_v2'
+
+        import bpy
+        from gen import Render
+
+        # import logging
+        # logging.basicConfig(level=logging.WARNING)
+
+        render = Render(scene_blend, 'data/shapes', 'data/materials')
+        render.init_render()
+
+        mtls = list(render.list_materials())
+        material = render.get_material(mtl_name)
+        if material is not None and material.node_tree is not None:
+            # Get the nodes in the material
+            nodes = material.node_tree.nodes
+
+            # Find the Principled BSDF node
+            for node in nodes:
+                if node.name in ['Rubber', 'Group']:
+                    # ns = list(node.node_tree.nodes)
+                    ns = list(node.inputs)
+                    for n in ns:
+                        if n.type == 'RGBA':
+                            n.default_value = (1, 0, 0, 1)  # Red color
+                    node.update()
+
+            # Update the material
+            # material.update()
+
+        logger.info("Objects before loaded:")
+        render.load_object(os.path.abspath(object_blend))
+        render.apply_material(obj_name, mtl_name)
+        render.offset_object_location(obj_name, (1, 1, 1))
+        image_path = os.path.join(runtime_path, "output-3.png")
+        render.set_render_args(samples=1024)
         render.set_render_output(image_path)
         render.render_scene()
         self.assertEqual(True, True)
