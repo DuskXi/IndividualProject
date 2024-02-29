@@ -1,6 +1,6 @@
 # Log for Individual Project Recording (CLEVR part)
 
-### 2023-02-20:
+### 2024-02-20:
 
 ---
 
@@ -8,7 +8,7 @@ Implement the neural network structure of the CV part and the trainer
 
 ---
 
-### 2023-02-21:
+### 2024-02-21:
 
 ---
 
@@ -21,7 +21,7 @@ Obtaining the bounding box of an object in the Clevr dataset does not require ma
 ---
 
 
-### 2023-02-22:
+### 2024-02-22:
 
 ---
 
@@ -39,7 +39,7 @@ In this case, we can only turn our goal to migrating and refactoring the image g
 
 ---
 
-### 2023-02-28:
+### 2024-02-28:
 
 ---
 #### Start Recording
