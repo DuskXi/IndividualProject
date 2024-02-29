@@ -16,7 +16,7 @@ It was found that in order to improve the training of the object detection model
 
 ---
 
-Obtaining the bounding box of an object in the Clevr dataset does not require manual labeling. You only need to obtain the rendering information, write a python program to perform the entire transformation process, from model transformation, view transformation, perspective projection transformation, and then calculate the bounding box of the object based on the position of the model vertices in the NDC space. This is feasible. Unfortunately, the scene files included in the Clevr dataset lose a lot of information, including model scaling and camera position, which is difficult to reconstruct. Therefore, the focus of work needs to shift to modifying the generation code, generating the data set by oneself, and outputting the corresponding bounding box data.
+Obtaining the bounding box of an object in the Clevr dataset does not require manual labeling. I need to obtain the rendering information, write a python program to perform the entire transformation process, from model transformation, view transformation, perspective projection transformation, and then calculate the bounding box of the object based on the position of the model vertices in the NDC space, this is feasible. Unfortunately, the scene files included in the Clevr dataset lose a lot of information, including model scaling and camera position, which is difficult to reconstruct. Therefore, the focus of work needs to shift to modifying the generation code, generating the data set by oneself, and outputting the corresponding bounding box data.
 
 ---
 
@@ -50,6 +50,10 @@ In this case, we can only turn our goal to migrating and refactoring the image g
 Plan Name[0]: clevr dataset generation code migration work
 Plan created[0]: rewrite the clevr generate code from blender < 2.8 to blender 3.6
 Consider[0]: due to the code (`facebookresearch/clevr-dataset-gen/blob/main/image_generation/render_images.py`) only supprot blender < 2.8, and blender < 2.8 is to old, cannot support cuda >= 11.0. And old cuda (such as 8.0 or 9.0 is not stable for RTX 40X0). So I need to rewrite the code to support blender 3.6
+
+---
+
+### 2024-02-29:
 
 ---
 
