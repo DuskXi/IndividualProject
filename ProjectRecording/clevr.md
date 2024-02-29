@@ -22,4 +22,5 @@ Consider[0]: due to the code (`facebookresearch/clevr-dataset-gen/blob/main/imag
 ---
 
 #### Plan execute
-Log[0]: Successfully test the code in blender 3.6 to render a image, and use cuda device
+1. Log[0]: Successfully test the code in blender 3.6 to render a image, and use cuda device
+2. Log[0]: test same scene with different object location, and without reinit whole blender bpy. This test is for optimize the render process different from the clevr-dataset-gen version

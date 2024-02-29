@@ -66,8 +66,8 @@ class DatasetGeneration(unittest.TestCase):
                 # set resolution
 
                 bpy.ops.wm.open_mainfile(filepath=sense_blend)
-                bpy.context.scene.render.resolution_x = 512
-                bpy.context.scene.render.resolution_y = 512
+                bpy.context.scene.render.resolution_x = 480 * 2
+                bpy.context.scene.render.resolution_y = 320 * 2
 
                 logger.info("Load object and material files")
 
@@ -91,6 +91,8 @@ class DatasetGeneration(unittest.TestCase):
                 if material:
                     obj = bpy.data.objects.get("SmoothCube_v2")
                     if obj:
+                        # change coordinates
+                        obj.location.z = 1
                         if obj.data.materials:
                             obj.data.materials[0] = material
                         else:
@@ -124,6 +126,55 @@ class DatasetGeneration(unittest.TestCase):
             traceback.print_exc()
             logger.error(e)
             self.assertEqual(True, False)
+
+    def test_render(self):
+        # test same scene with different object location, and without reinit whole blender bpy
+        # this test is for optimize the render process different from the clevr-dataset-gen version
+        runtime_path = os.path.abspath(os.getcwd())
+        sense_blend = 'data/base_scene.blend'
+        object_blend = 'data/shapes/SmoothCube_v2.blend'
+        # mtl_blend = 'data/materials/Rubber.blend'
+
+        mtl_name = 'BMD_Rubber_0004'
+        obj_name = 'SmoothCube_v2'
+
+        from gen import Render
+
+        render = Render(sense_blend, 'data/shapes', 'data/materials')
+        render.init_render()
+        logger.info("Objects before loaded:")
+        logger.debug(render.list_objects())
+        render.set_render_args(resolution=(480 * 2, 320 * 2))
+        # first render round
+        render.load_object(os.path.abspath(object_blend))
+        render.apply_material(obj_name, mtl_name)
+        render.offset_object_location(obj_name, (0, 0, 1))
+        image_path = os.path.join(runtime_path, "output-1.png")
+        render.set_render_output(image_path)
+        # display the scene
+        # logger.info("Render")
+        # logger.info("Loaded objects:")
+        # logger.debug(render.loaded_objects)
+        # logger.info("Loaded materials:")
+        # logger.debug(render.loaded_materials)
+        # logger.info("Blender objects:")
+        # logger.debug(render.list_objects())
+        # logger.info("Blender materials:")
+        # logger.debug(render.list_materials())
+        # render.print_objects()
+        render.render_scene()
+        logger.info(f"Objects before unloaded: {render.list_object_names()}")
+        render.unload_objects()
+        logger.info(f"Objects after unloaded: {render.list_object_names()}")
+
+        logger.info("Start second round render:")
+        render.load_object(os.path.abspath(object_blend))
+        render.apply_material(obj_name, mtl_name)
+        render.offset_object_location(obj_name, (1, 1, 1))
+        image_path = os.path.join(runtime_path, "output-2.png")
+        render.set_render_output(image_path)
+        render.render_scene()
+        self.assertEqual(True, True)
 
 
 if __name__ == '__main__':

@@ -1,2 +1,3 @@
 loguru
+rich
 bpy==3.6
