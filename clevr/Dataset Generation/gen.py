@@ -121,8 +121,8 @@ class Render:
             return material
 
     def set_object_location(self, obj: str, location: tuple):
-        if obj not in self.loaded_objects:
-            raise ValueError("Object not found")
+        # if obj not in self.loaded_objects:
+        #     raise ValueError("Object not found")
         if len(location) != 3:
             raise ValueError("Invalid location")
         object_3d = bpy.data.objects[obj]
@@ -137,14 +137,14 @@ class Render:
         object_3d.location = np.add(object_3d.location, offset)
 
     def zoom_object(self, obj: str, zoom: float):
-        if obj not in self.loaded_objects:
-            raise ValueError("Object not found")
+        # if obj not in self.loaded_objects:
+        #     raise ValueError("Object not found")
         object_3d = bpy.data.objects[obj]
         object_3d.scale = (zoom, zoom, zoom)
 
     def rotate_object(self, obj: str, rotation: tuple):
-        if obj not in self.loaded_objects:
-            raise ValueError("Object not found")
+        # if obj not in self.loaded_objects:
+        #     raise ValueError("Object not found")
         if len(rotation) != 3:
             raise ValueError("Invalid rotation")
         object_3d = bpy.data.objects[obj]
@@ -222,6 +222,7 @@ class Render:
 
 
 class SceneObject(dict):
+    model_name: str
     name: str
     mtl_name: str
     color: tuple
@@ -229,8 +230,9 @@ class SceneObject(dict):
     location: tuple
     rotation: tuple
 
-    def __init__(self, name: str, mtl_name: str, color: tuple, scale: float = 1.0, location: tuple = (0, 0, 0), rotation: tuple = (0, 0, 0)):
+    def __init__(self, model_name: str, name: str, mtl_name: str, color: tuple, scale: float = 1.0, location: tuple = (0, 0, 0), rotation: tuple = (0, 0, 0)):
         data_dict = {
+            "model_name": model_name,
             "name": name,
             "mtl_name": mtl_name,
             "color": color,
@@ -244,13 +246,13 @@ class SceneObject(dict):
 
 
 class Scene(dict):
-    objects: SceneObject
+    objects: list[SceneObject]
     camera_location: tuple
     camera_rotation: tuple
 
-    def __init__(self, objects: SceneObject, camera_location: tuple, camera_rotation: tuple):
+    def __init__(self, objects: list[SceneObject], camera_location: tuple = None, camera_rotation: tuple = None):
         data_dict = {
-            "objects": objects.__dict__,
+            "objects": objects,
             "camera_location": camera_location,
             "camera_rotation": camera_rotation
         }
@@ -261,14 +263,16 @@ class Scene(dict):
 
 def render_scene(scene: Scene, render: Render, output_path="output.png", file_format="PNG"):
     for obj in scene.objects:
-        render.load_object_auto(obj.name, obj.name)
-        render.apply_material(obj.name, obj.mtl_name)
+        render.load_object_auto(obj.model_name, obj.name)
+        render.apply_material(obj.name, obj.mtl_name, obj.color)
         render.set_object_location(obj.name, obj.location)
         render.rotate_object(obj.name, obj.rotation)
         render.zoom_object(obj.name, obj.scale)
 
-    render.set_camera_location(scene.camera_location)
-    render.set_camera_rotation(scene.camera_rotation)
+    if scene.camera_location is not None:
+        render.set_camera_location(scene.camera_location)
+    if scene.camera_rotation is not None:
+        render.set_camera_rotation(scene.camera_rotation)
     render.set_render_output(output_path, file_format)
 
     render.render_scene()

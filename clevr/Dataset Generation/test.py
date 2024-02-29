@@ -4,6 +4,8 @@ import traceback
 import unittest
 from loguru import logger
 
+from gen import SceneObject, Scene, render_scene
+
 
 class DatasetGeneration(unittest.TestCase):
     def test_blender_path(self):
@@ -264,6 +266,34 @@ class DatasetGeneration(unittest.TestCase):
         render.set_render_args(samples=1024)
         render.set_render_output(image_path)
         render.render_scene()
+        self.assertEqual(True, True)
+
+    def test_render_by_scene(self):
+        runtime_path = os.path.abspath(os.getcwd())
+        scene_blend = 'data/base_scene.blend'
+        object_blend = 'data/shapes/SmoothCube_v2.blend'
+        # mtl_blend = 'data/materials/Rubber.blend'
+
+        mtl_name = 'BMD_Rubber_0004'
+        # mtl_name = 'Material'
+        obj_name = 'SmoothCube_v2'
+
+        import bpy
+        from gen import Render
+
+        # import logging
+        # logging.basicConfig(level=logging.WARNING)
+
+        render = Render(scene_blend, 'data/shapes', 'data/materials')
+        render.init_render()
+
+        objects = [
+            SceneObject('SmoothCube_v2', 'box1', 'BMD_Rubber_0004', (1, 0, 0, 1), 0.75, (1, 1, 1)),
+            SceneObject('SmoothCube_v2', 'box2', 'Material', (1, 1, 0, 1), 0.45, (-1, -1, 1))
+        ]
+        scene = Scene(objects, None, None)
+        render.set_render_args(samples=2048, resolution=(480 * 2, 320 * 2))
+        render_scene(scene, render, os.path.join(runtime_path, "output-5.png"))
         self.assertEqual(True, True)
 
 
