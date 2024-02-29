@@ -201,9 +201,13 @@ class DatasetGeneration(unittest.TestCase):
 
         mtls = list(render.list_materials())
         material = render.get_material(mtl_name)
+        material = material.copy()
         if material is not None and material.node_tree is not None:
             # Get the nodes in the material
-            nodes = material.node_tree.nodes
+            new_mat = material.copy()
+            new_mat.name = 'n_mtl'
+
+            nodes = new_mat.node_tree.nodes
 
             # Find the Principled BSDF node
             for node in nodes:
@@ -215,14 +219,48 @@ class DatasetGeneration(unittest.TestCase):
                             n.default_value = (1, 0, 0, 1)  # Red color
                     node.update()
 
+            # bpy.data.materials.append(material)
+
             # Update the material
             # material.update()
 
         logger.info("Objects before loaded:")
         render.load_object(os.path.abspath(object_blend))
-        render.apply_material(obj_name, mtl_name)
+        render.apply_material(obj_name, 'n_mtl')
         render.offset_object_location(obj_name, (1, 1, 1))
         image_path = os.path.join(runtime_path, "output-3.png")
+        render.set_render_args(samples=1024)
+        render.set_render_output(image_path)
+        render.render_scene()
+        self.assertEqual(True, True)
+
+    def test_auto_mtl_color(self):
+        runtime_path = os.path.abspath(os.getcwd())
+        scene_blend = 'data/base_scene.blend'
+        object_blend = 'data/shapes/SmoothCube_v2.blend'
+        # mtl_blend = 'data/materials/Rubber.blend'
+
+        mtl_name = 'BMD_Rubber_0004'
+        # mtl_name = 'Material'
+        obj_name = 'SmoothCube_v2'
+
+        import bpy
+        from gen import Render
+
+        # import logging
+        # logging.basicConfig(level=logging.WARNING)
+
+        render = Render(scene_blend, 'data/shapes', 'data/materials')
+        render.init_render()
+
+        # render.load_object(os.path.abspath(object_blend))
+        render.load_object_auto(obj_name, 'box1')
+        render.load_object_auto(obj_name, 'box2')
+        render.apply_material('box1', mtl_name, (1, 0, 0, 1))
+        render.apply_material('box2', mtl_name, (1, 1, 0, 1))
+        render.offset_object_location('box1', (1, 1, 1))
+        render.offset_object_location('box2', (-1, -1, 1))
+        image_path = os.path.join(runtime_path, "output-4.png")
         render.set_render_args(samples=1024)
         render.set_render_output(image_path)
         render.render_scene()

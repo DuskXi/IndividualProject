@@ -82,23 +82,43 @@ class Render:
         for obj_file in obj_files:
             with bpy.data.libraries.load(obj_file, link=False) as (data_from, data_to):
                 data_to.objects = [name for name in data_from.objects]
-                self.loaded_objects.extend(data_to.objects)
             for obj in data_to.objects:
                 if obj is not None and obj.name.startswith(target_name):
                     bpy.context.collection.objects.link(obj)
                     obj.name = new_name
+            self.loaded_objects.extend(data_to.objects)
 
-    def apply_material(self, obj: str, mtl: str):
-        if obj not in self.loaded_objects:
-            raise ValueError("Object not found")
-        if mtl not in self.loaded_materials:
-            raise ValueError("Material not found")
-        material = bpy.data.materials[mtl]
+    def apply_material(self, obj: str, mtl: str, color: tuple = None):
+        # if obj not in self.loaded_objects:
+        #     raise ValueError("Object not found")
+        # if mtl not in self.loaded_materials:
+        #     raise ValueError("Material not found")
+        material = self.get_mtl(mtl, color)
         object_3d = bpy.data.objects[obj]
         if object_3d.data.materials:
             object_3d.data.materials[0] = material
         else:
             object_3d.data.materials.append(material)
+
+    @staticmethod
+    def rgba_to_str(color: tuple):
+        return f"rgba_{color[0]}_{color[1]}_{color[2]}_{color[3]})"
+
+    def get_mtl(self, mtl: str, color: tuple = None):
+        if color is None:
+            return bpy.data.materials[mtl]
+        else:
+            material = bpy.data.materials[mtl].copy()
+            material.name = f"{material.name}_{self.rgba_to_str(color)}"
+            nodes = material.node_tree.nodes
+            for node in nodes:
+                if node.name in ['Rubber', 'Group']:
+                    ns = list(node.inputs)
+                    for n in ns:
+                        if n.type == 'RGBA':
+                            n.default_value = color
+                    node.update()
+            return material
 
     def set_object_location(self, obj: str, location: tuple):
         if obj not in self.loaded_objects:
@@ -109,8 +129,8 @@ class Render:
         object_3d.location = location
 
     def offset_object_location(self, obj: str, offset: tuple):
-        if obj not in self.loaded_objects:
-            raise ValueError("Object not found")
+        # if obj not in self.loaded_objects:
+        #     raise ValueError("Object not found")
         if len(offset) != 3:
             raise ValueError("Invalid offset")
         object_3d = bpy.data.objects[obj]
