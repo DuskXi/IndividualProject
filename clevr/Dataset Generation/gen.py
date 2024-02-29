@@ -63,7 +63,7 @@ class Render:
                     bpy.context.collection.objects.link(obj)
         elif type(obj_file) == int:
             obj_files = os.listdir(self.object_dir)
-            obj_files = [os.path.join(obj_file, f) for f in obj_files if f.endswith(".blend")]
+            obj_files = [os.path.join(self.object_dir, f) for f in obj_files if f.endswith(".blend")]
             if len(obj_files) <= obj_file:
                 raise FileNotFoundError("Object file not found")
             object_blend = obj_files[obj_file]
@@ -75,6 +75,18 @@ class Render:
                     bpy.context.collection.objects.link(obj)
         else:
             raise ValueError("Invalid object file")
+
+    def load_object_auto(self, target_name, new_name):
+        obj_files = os.listdir(self.object_dir)
+        obj_files = [os.path.join(self.object_dir, f) for f in obj_files if f.endswith(".blend")]
+        for obj_file in obj_files:
+            with bpy.data.libraries.load(obj_file, link=False) as (data_from, data_to):
+                data_to.objects = [name for name in data_from.objects]
+                self.loaded_objects.extend(data_to.objects)
+            for obj in data_to.objects:
+                if obj is not None and obj.name.startswith(target_name):
+                    bpy.context.collection.objects.link(obj)
+                    obj.name = new_name
 
     def apply_material(self, obj: str, mtl: str):
         if obj not in self.loaded_objects:
@@ -103,6 +115,37 @@ class Render:
             raise ValueError("Invalid offset")
         object_3d = bpy.data.objects[obj]
         object_3d.location = np.add(object_3d.location, offset)
+
+    def zoom_object(self, obj: str, zoom: float):
+        if obj not in self.loaded_objects:
+            raise ValueError("Object not found")
+        object_3d = bpy.data.objects[obj]
+        object_3d.scale = (zoom, zoom, zoom)
+
+    def rotate_object(self, obj: str, rotation: tuple):
+        if obj not in self.loaded_objects:
+            raise ValueError("Object not found")
+        if len(rotation) != 3:
+            raise ValueError("Invalid rotation")
+        object_3d = bpy.data.objects[obj]
+        object_3d.rotation_euler = rotation
+
+    def set_camera_location(self, location: tuple):
+        if len(location) != 3:
+            raise ValueError("Invalid location")
+        bpy.data.objects["Camera"].location = location
+
+    def move_camera(self, offset: tuple):
+        if len(offset) != 3:
+            raise ValueError("Invalid offset")
+        camera = bpy.data.objects["Camera"]
+        camera.location = np.add(camera.location, offset)
+
+    def set_camera_rotation(self, rotation: tuple):
+        if len(rotation) != 3:
+            raise ValueError("Invalid rotation")
+        camera = bpy.data.objects["Camera"]
+        camera.rotation_euler = rotation
 
     def unload_objects(self):
         for obj in self.loaded_objects:
@@ -152,3 +195,56 @@ class Render:
         logger.info("Objects in scene:")
         for obj in bpy.data.objects:
             logger.info("\t" + obj.name)
+
+
+class SceneObject(dict):
+    name: str
+    mtl_name: str
+    color: tuple
+    scale: float
+    location: tuple
+    rotation: tuple
+
+    def __init__(self, name: str, mtl_name: str, color: tuple, scale: float = 1.0, location: tuple = (0, 0, 0), rotation: tuple = (0, 0, 0)):
+        data_dict = {
+            "name": name,
+            "mtl_name": mtl_name,
+            "color": color,
+            "scale": scale,
+            "location": location,
+            "rotation": rotation
+        }
+        super().__init__(data_dict)
+        for k, v in data_dict.items():
+            setattr(self, k, v)
+
+
+class Scene(dict):
+    objects: SceneObject
+    camera_location: tuple
+    camera_rotation: tuple
+
+    def __init__(self, objects: SceneObject, camera_location: tuple, camera_rotation: tuple):
+        data_dict = {
+            "objects": objects.__dict__,
+            "camera_location": camera_location,
+            "camera_rotation": camera_rotation
+        }
+        super().__init__(data_dict)
+        for k, v in data_dict.items():
+            setattr(self, k, v)
+
+
+def render_scene(scene: Scene, render: Render, output_path="output.png", file_format="PNG"):
+    for obj in scene.objects:
+        render.load_object_auto(obj.name, obj.name)
+        render.apply_material(obj.name, obj.mtl_name)
+        render.set_object_location(obj.name, obj.location)
+        render.rotate_object(obj.name, obj.rotation)
+        render.zoom_object(obj.name, obj.scale)
+
+    render.set_camera_location(scene.camera_location)
+    render.set_camera_rotation(scene.camera_rotation)
+    render.set_render_output(output_path, file_format)
+
+    render.render_scene()

@@ -36,10 +36,10 @@ class DatasetGeneration(unittest.TestCase):
 
     def test_a_simple_render_example(self):
         runtime_path = os.path.abspath(os.getcwd())
-        sense_blend = 'data/base_scene.blend'
+        scene_blend = 'data/base_scene.blend'
         object_blend = 'data/shapes/SmoothCube_v2.blend'
         mtl_blend = 'data/materials/Rubber.blend'
-        sense_blend = os.path.abspath(sense_blend)
+        scene_blend = os.path.abspath(scene_blend)
         object_blend = os.path.abspath(object_blend)
         mtl_blend = os.path.abspath(mtl_blend)
 
@@ -58,14 +58,14 @@ class DatasetGeneration(unittest.TestCase):
 
                 logger.info("Load sense files")
 
-                # with bpy.data.libraries.load(sense_blend, link=False) as (data_from, data_to):
+                # with bpy.data.libraries.load(scene_blend, link=False) as (data_from, data_to):
                 #     data_to.scenes = [name for name in data_from.scenes]
                 #
                 # bpy.context.window.scene = bpy.data.scenes[0]
 
                 # set resolution
 
-                bpy.ops.wm.open_mainfile(filepath=sense_blend)
+                bpy.ops.wm.open_mainfile(filepath=scene_blend)
                 bpy.context.scene.render.resolution_x = 480 * 2
                 bpy.context.scene.render.resolution_y = 320 * 2
 
@@ -131,7 +131,7 @@ class DatasetGeneration(unittest.TestCase):
         # test same scene with different object location, and without reinit whole blender bpy
         # this test is for optimize the render process different from the clevr-dataset-gen version
         runtime_path = os.path.abspath(os.getcwd())
-        sense_blend = 'data/base_scene.blend'
+        scene_blend = 'data/base_scene.blend'
         object_blend = 'data/shapes/SmoothCube_v2.blend'
         # mtl_blend = 'data/materials/Rubber.blend'
 
@@ -140,7 +140,10 @@ class DatasetGeneration(unittest.TestCase):
 
         from gen import Render
 
-        render = Render(sense_blend, 'data/shapes', 'data/materials')
+        # import logging
+        # logging.basicConfig(level=logging.WARNING)
+
+        render = Render(scene_blend, 'data/shapes', 'data/materials')
         render.init_render()
         logger.info("Objects before loaded:")
         logger.debug(render.list_objects())
