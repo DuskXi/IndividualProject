@@ -32,7 +32,7 @@ def redirect_stdout(enable: bool = True, target=os.devnull):
 
 
 class Render:
-    def __init__(self, scene_file, object_dir, material_dir, blender_bin=None, blender_log_suppress=True):
+    def __init__(self, scene_file, object_dir, material_dir, blender_bin=None, blender_log_suppress=False):
         self.blender_log_suppress = blender_log_suppress
         if blender_bin:
             self.blender_bin = blender_bin

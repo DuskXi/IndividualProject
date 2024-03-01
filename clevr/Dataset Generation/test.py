@@ -3,11 +3,14 @@ import os
 import sys
 import traceback
 import unittest
+from PIL import Image, ImageDraw
+
 from loguru import logger
 
 from config import Config
-from gen import render_scene, random_scene, Generator
+from generator import render_scene, random_scene, Generator
 from data_middleware_ import SceneObject, Scene
+from mathutils import Vector
 
 
 class DatasetGeneration(unittest.TestCase):
@@ -361,6 +364,75 @@ class DatasetGeneration(unittest.TestCase):
         config = Config()
         generator = Generator(config)
         generator.run()
+        self.assertEqual(True, True)
+
+    def test_object_vertex_extraction(self):
+        runtime_path = os.path.abspath(os.getcwd())
+        scene_blend = 'data/base_scene.blend'
+        object_blend = 'data/shapes/SmoothCube_v2.blend'
+        # mtl_blend = 'data/materials/Rubber.blend'
+
+        mtl_name = 'BMD_Rubber_0004'
+        # mtl_name = 'Material'
+        obj_name = 'SmoothCube_v2'
+
+        import bpy
+        from render import Render
+
+        # import logging
+        # logging.basicConfig(level=logging.WARNING)
+
+        render = Render(scene_blend, 'data/shapes', 'data/materials')
+        render.init_render()
+        render.set_render_args()
+
+        render.load_object_auto("SmoothCube_v2", "SmoothCube_v2")
+        render.set_object_location("SmoothCube_v2", (0, 0, 1))
+        obj = render.get_object("SmoothCube_v2")
+
+        vertices = obj.data.vertices
+
+        logger.info(f"Vertices[0]: x: {vertices[0].co.x}, y: {vertices[0].co.y}, z: {vertices[0].co.z}")
+
+        # to 4d
+
+        vertices = [Vector((v.co.x, v.co.y, v.co.z, 1.0)) for v in vertices]
+
+        logger.info(f"Build mvp matrix")
+
+        model_matrix = obj.matrix_world
+        view_matrix = bpy.context.scene.camera.matrix_world.inverted()
+        projection_matrix = bpy.context.scene.camera.calc_matrix_camera(
+            bpy.context.evaluated_depsgraph_get(),
+            x=480,
+            y=320)
+        mvp_matrix = projection_matrix @ view_matrix @ model_matrix
+
+        logger.info(f"Calculate vertices")
+        ndc_vertices = [mvp_matrix @ v for v in vertices]
+        ndc_vertices = [(v / v.w) * -1 for v in ndc_vertices]
+        xmin, xmax = min(ndc_vertices, key=lambda v: v.x).x, max(ndc_vertices, key=lambda v: v.x).x
+        ymin, ymax = min(ndc_vertices, key=lambda v: v.y).y, max(ndc_vertices, key=lambda v: v.y).y
+
+        logger.info(f"xmin: {xmin}, xmax: {xmax}, ymin: {ymin}, ymax: {ymax}")
+        screen_box = [
+            (xmin * 0.5 + 0.5) * 480,
+            (xmax * 0.5 + 0.5) * 480,
+            (ymin * 0.5 + 0.5) * 320,
+            (ymax * 0.5 + 0.5) * 320
+        ]
+        logger.info(f"box: xmin: {screen_box[0]}, xmax: {screen_box[1]}, ymin: {screen_box[2]}, ymax: {screen_box[3]}")
+
+        render.apply_material("SmoothCube_v2", "BMD_Rubber_0004")
+        render.set_render_output(os.path.join(runtime_path, "output-7.png"))
+        render.render_scene()
+
+        # draw bounding box
+        image = Image.open(os.path.join(runtime_path, "output-7.png"))
+        draw = ImageDraw.Draw(image)
+        draw.rectangle([screen_box[0], screen_box[2], screen_box[1], screen_box[3]], outline="red")
+        image.save(os.path.join(runtime_path, "output-7.png"))
+
         self.assertEqual(True, True)
 
 
