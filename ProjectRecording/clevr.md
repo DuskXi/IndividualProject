@@ -70,3 +70,4 @@ Consider[0]: due to the code (`facebookresearch/clevr-dataset-gen/blob/main/imag
 
 1. Log[0]: Successfully tested the entire random scene generation rendering process
 2. Log[0]: Continue to wrap the entire generation task into the generator and equip it with Config processing tools.
+3. Log[0]: Phase summary: Now the entire migration/rewriting work has no blind spots from a technical perspective. What still needs to be implemented: In the random process, before rendering, filter out problems where objects are completely occluded by other objects, or when two objects intersect in 3D space.
