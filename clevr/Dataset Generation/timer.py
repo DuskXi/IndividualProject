@@ -23,11 +23,11 @@ class Timer:
         if level == "info":
             logger.info(f"{msg}: {self.elapsed_time() * 1000:.4f} ms")
         elif level == "debug":
-            logger.debug(f"{msg}: {self.elapsed_time() * 1000:.4f} ms")
+            logger.debug(f"\t{msg}: {self.elapsed_time() * 1000:.4f} ms")
         elif level == "warning":
-            logger.warning(f"{msg}: {self.elapsed_time() * 1000:.4f} ms")
+            logger.warning(f"-{msg}: {self.elapsed_time() * 1000:.4f} ms")
         elif level == "error":
-            logger.error(f"{msg}: {self.elapsed_time() * 1000:.4f} ms")
+            logger.error(f"|-{msg}: {self.elapsed_time() * 1000:.4f} ms")
         else:
             raise ValueError("Invalid log level")
         return self
