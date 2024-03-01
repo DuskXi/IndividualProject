@@ -11,6 +11,8 @@ from geometry_tools import calculate_horizontal_max_radius, check_collision, sim
 from render import Render
 from tqdm.rich import trange, tqdm
 
+from timer import Timer
+
 
 class Generator:
     scene: Scene
@@ -50,12 +52,14 @@ class Generator:
         self.scene = Scene(objects)
 
     def render_scene(self, output_path="output.png", file_format="PNG"):
+        timer = Timer().start()
         for obj in self.scene.objects:
             self.render.load_object_auto(obj.model_name, obj.name)
             self.render.apply_material(obj.name, obj.mtl_name, obj.color)
             self.render.set_object_location(obj.name, obj.location)
             self.render.rotate_object(obj.name, obj.rotation)
             self.render.zoom_object(obj.name, obj.scale)
+        timer.stop().print("Apply scene to blender", level="debug").reset().start()
 
         bpy.context.view_layer.update()
 
@@ -64,14 +68,17 @@ class Generator:
         if self.scene.camera_rotation is not None:
             self.render.set_camera_rotation(self.scene.camera_rotation)
         bpy.context.view_layer.update()
-
+        timer.stop().print("Update blender and setup cam", level="debug").reset().start()
         objects = [bpy.data.objects[obj.name] for obj in self.scene.objects]
         mvp_matrices = [self.calculate_mvp(obj) for obj in objects]
+        timer.stop().print("Prepare simple rasterization data", level="debug").reset().start()
         object_reverse_occlusion_rate = simple_rasterization(objects, mvp_matrices, sample_size=32)
+        timer.stop().print("Rasterization", level="debug").reset().start()
 
         self.render.set_render_output(output_path, file_format)
 
         self.render.render_scene()
+        timer.stop().print("Run Render", level="debug").reset().start()
 
     @staticmethod
     def calculate_all_shape_height(render: Render, list_object_type=None):
@@ -114,9 +121,13 @@ class Generator:
         shape_heights = self.calculate_all_shape_height(self.render)
         shape_radius = self.calculate_shape_radius(self.render)
         self.render.set_render_args(self.config.engine, self.config.resolution, self.config.resolution_percentage, self.config.samples, self.config.use_gpu, self.config.use_adaptive_sampling)
+        timer = Timer()
         for i in tqdm(range(self.config.num_images), desc="Rendering"):
+            timer.reset().start()
             self.generate_scene(self.config.num_objects, shape_heights, shape_radius)
+            timer.stop().print("Generate Scene").reset().start()
             self.render_scene(os.path.abspath(os.path.join(self.config.output_dir, f"output_{i}.png")))
+            timer.stop().print("Render").reset().start()
             self.render.unload_objects()
         logger.info(f"Rendered {self.config.num_images} images")
 

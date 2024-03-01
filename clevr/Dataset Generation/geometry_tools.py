@@ -47,7 +47,8 @@ def quad_to_triangles(quad):
 
 def simple_rasterization(objects, mvp_matrices, sample_size=32):
     # projection to ndc
-    width = sample_size, height = sample_size
+    width = sample_size
+    height = sample_size
     ndc_vertices = {}
     for obj, mvp_matrix in zip(objects, mvp_matrices):
         ndc_vertices[obj.name] = projection(obj, mvp_matrix)
@@ -65,11 +66,11 @@ def simple_rasterization(objects, mvp_matrices, sample_size=32):
         for face in mesh.polygons:
             vertex_indices = face.vertices[:]
             if len(vertex_indices) == 3:
-                triangles.append([np.array(ndc_vertices[obj.name][i], dtype=np.float64) for i in vertex_indices] + [i])
+                triangles.append((*[np.array(ndc_vertices[obj.name][i], dtype=np.float64) for i in vertex_indices], i))
             elif len(vertex_indices) == 4:
                 quads = [np.array(ndc_vertices[obj.name][i], dtype=np.float64) for i in vertex_indices]
                 for triangle in quad_to_triangles(quads):
-                    triangles.append([*triangle, i])
+                    triangles.append((*triangle, i))
         draw_triangles(frameBuffer, zBuffer, triangles, width, height)
     # statistics
     result = {}
@@ -85,8 +86,8 @@ def simple_rasterization(objects, mvp_matrices, sample_size=32):
         pixels_percentage = count_obj / (count_obj + count_other)
         result[obj.name] = pixels_percentage
 
-    for k, v in result.items():
-        logger.info(f"\t{k}: {v:.2%}")
+    # for k, v in result.items():
+    #     logger.info(f"\t{k}: {v:.2%}")
 
     return result
 
@@ -117,28 +118,23 @@ def barycentric_numpy(a: np.ndarray, b: np.ndarray, c: np.ndarray, p: np.ndarray
 def draw_triangles(frame, z_buffer, triangles, width, height):
     for triangle in triangles:
         v1, v2, v3, color = triangle
-        # 计算边界盒，以便只遍历三角形覆盖的区域
         min_x = max(int(min(v1[0], v2[0], v3[0])), 0)
         max_x = min(int(max(v1[0], v2[0], v3[0])), width - 1)
         min_y = max(int(min(v1[1], v2[1], v3[1])), 0)
         max_y = min(int(max(v1[1], v2[1], v3[1])), height - 1)
 
-        # 遍历边界盒内的像素
         for y in range(min_y, max_y + 1):
             for x in range(min_x, max_x + 1):
                 p = np.array([x, y])
-                # 使用边函数测试点是否在三角形内
                 w0 = edge_function(v2, v3, p)
                 w1 = edge_function(v3, v1, p)
                 w2 = edge_function(v1, v2, p)
                 if w0 >= 0 and w1 >= 0 and w2 >= 0:
-                    # 着色像素
                     u, v, w = barycentric_numpy(v1[:3], v2[:3], v3[:3], np.array([x, y, 0]))
                     z = v1[2] * u + v2[2] * v + v3[2] * w
                     if z > z_buffer[y, x]:
                         z_buffer[y, x] = z
-                        frame[y, x] = color  # 注意，Numpy中的图像坐标是[y, x]
-
+                        frame[y, x] = color
 
 def calculate_horizontal_max_radius(obj):
     if obj and hasattr(obj, 'bound_box'):
