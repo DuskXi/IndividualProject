@@ -1,12 +1,13 @@
 import os
 
+import bpy
 import numpy as np
 
 from loguru import logger
 
 from config import Config
 from data_middleware import SceneObject, Scene
-from geometry_tools import calculate_horizontal_max_radius, check_collision
+from geometry_tools import calculate_horizontal_max_radius, check_collision, simple_rasterization
 from render import Render
 from tqdm.rich import trange, tqdm
 
@@ -55,12 +56,19 @@ class Generator:
             self.render.set_object_location(obj.name, obj.location)
             self.render.rotate_object(obj.name, obj.rotation)
             self.render.zoom_object(obj.name, obj.scale)
-            # bpy.context.view_layer.update()
+
+        bpy.context.view_layer.update()
 
         if self.scene.camera_location is not None:
             self.render.set_camera_location(self.scene.camera_location)
         if self.scene.camera_rotation is not None:
             self.render.set_camera_rotation(self.scene.camera_rotation)
+        bpy.context.view_layer.update()
+
+        # objects = [bpy.data.objects[obj.name] for obj in self.scene.objects]
+        # mvp_matrices = [self.calculate_mvp(obj) for obj in objects]
+        # simple_rasterization(objects, mvp_matrices, self.config.resolution[0], self.config.resolution[1])
+
         self.render.set_render_output(output_path, file_format)
 
         self.render.render_scene()
@@ -91,6 +99,16 @@ class Generator:
             render.unload_objects()
 
         return result
+
+    @staticmethod
+    def calculate_mvp(obj):
+        model_matrix = obj.matrix_world
+        view_matrix = bpy.context.scene.camera.matrix_world.inverted()
+        projection_matrix = bpy.context.scene.camera.calc_matrix_camera(
+            bpy.context.evaluated_depsgraph_get(),
+            x=480,
+            y=320)
+        return projection_matrix @ view_matrix @ model_matrix
 
     def run(self):
         shape_heights = self.calculate_all_shape_height(self.render)
