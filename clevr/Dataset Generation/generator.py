@@ -65,9 +65,9 @@ class Generator:
             self.render.set_camera_rotation(self.scene.camera_rotation)
         bpy.context.view_layer.update()
 
-        # objects = [bpy.data.objects[obj.name] for obj in self.scene.objects]
-        # mvp_matrices = [self.calculate_mvp(obj) for obj in objects]
-        # simple_rasterization(objects, mvp_matrices, self.config.resolution[0], self.config.resolution[1])
+        objects = [bpy.data.objects[obj.name] for obj in self.scene.objects]
+        mvp_matrices = [self.calculate_mvp(obj) for obj in objects]
+        object_reverse_occlusion_rate = simple_rasterization(objects, mvp_matrices, sample_size=32)
 
         self.render.set_render_output(output_path, file_format)
 
