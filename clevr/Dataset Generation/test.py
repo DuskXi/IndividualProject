@@ -9,7 +9,7 @@ from loguru import logger
 
 from config import Config
 from generator import render_scene, random_scene, Generator
-from data_middleware_ import SceneObject, Scene
+from data_middleware import SceneObject, Scene
 from mathutils import Vector
 
 
@@ -387,7 +387,8 @@ class DatasetGeneration(unittest.TestCase):
         render.set_render_args()
 
         render.load_object_auto("SmoothCube_v2", "SmoothCube_v2")
-        render.set_object_location("SmoothCube_v2", (0, 0, 1))
+        render.set_object_location("SmoothCube_v2", (-2, 0, 1))
+        render.zoom_object("SmoothCube_v2", 0.75)
         obj = render.get_object("SmoothCube_v2")
 
         vertices = obj.data.vertices
@@ -410,7 +411,7 @@ class DatasetGeneration(unittest.TestCase):
 
         logger.info(f"Calculate vertices")
         ndc_vertices = [mvp_matrix @ v for v in vertices]
-        ndc_vertices = [(v / v.w) * -1 for v in ndc_vertices]
+        ndc_vertices = [(v / v.w) * Vector((1, -1, 1, 1)) for v in ndc_vertices]
         xmin, xmax = min(ndc_vertices, key=lambda v: v.x).x, max(ndc_vertices, key=lambda v: v.x).x
         ymin, ymax = min(ndc_vertices, key=lambda v: v.y).y, max(ndc_vertices, key=lambda v: v.y).y
 

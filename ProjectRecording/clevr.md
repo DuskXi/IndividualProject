@@ -74,3 +74,4 @@ Consider[0]: due to the code (`facebookresearch/clevr-dataset-gen/blob/main/imag
 3. Log[0]: Phase summary: Now the entire migration/rewriting work has no blind spots from a technical perspective. What still needs to be implemented: In the random process, before rendering, filter out problems where objects are completely occluded by other objects, or when two objects intersect in 3D space.
 4. Log[0]: Phased goal: Implement CG MVP projection calculation and simple rasterization calculation in python to calculate depth field occlusion information and object bounding box.
 5. Log[0]: Successfully conducted technical verification of the bounding box algorithm.
+6. Log[0]: Implements collision detection during scene generation, reduces unnecessary calculations to a minimum, and avoids clevr's original generation code that requires blender to run additional unnecessary calculations while rendering.

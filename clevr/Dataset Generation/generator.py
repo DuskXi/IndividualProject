@@ -5,7 +5,8 @@ import numpy as np
 from loguru import logger
 
 from config import Config
-from data_middleware_ import SceneObject, Scene
+from data_middleware import SceneObject, Scene
+from geometry_tools import calculate_horizontal_max_radius, check_collision
 from render import Render
 from tqdm.rich import trange, tqdm
 
@@ -19,7 +20,7 @@ class Generator:
         self.render.init_render()
         self.objects: list[SceneObject] = []
 
-    def generate_scene(self, num_objects, shape_heights):
+    def generate_scene(self, num_objects, shape_heights, shape_radius):
         list_object_type = ["SmoothCube_v2", "SmoothCylinder", "Sphere"]
         list_material = ["BMD_Rubber_0004", "Material"]
         colors = {
@@ -31,13 +32,19 @@ class Generator:
         horizontal_offset_range = (-3, 3)
         objects: list[SceneObject] = []
         for i in range(num_objects):
-            obj_type = np.random.choice(list_object_type)
-            mtl = np.random.choice(list_material)
-            color = np.random.choice(list(colors.keys()))
-            size = np.random.choice(list(sizes.keys()))
-            location = (np.random.uniform(*horizontal_offset_range), np.random.uniform(*horizontal_offset_range), (shape_heights[obj_type] * sizes[size]) / 2)
-            rotation = (0, 0, np.random.uniform(0, 360))
-            objects.append(SceneObject(obj_type, f"obj_{obj_type}_{i}", mtl, (*(np.array(colors[color]) / 255), 1), sizes[size], location, rotation))
+            for j in range(20):
+                obj_type = np.random.choice(list_object_type)
+                mtl = np.random.choice(list_material)
+                color = np.random.choice(list(colors.keys()))
+                size = np.random.choice(list(sizes.keys()))
+                location = (np.random.uniform(*horizontal_offset_range), np.random.uniform(*horizontal_offset_range), (shape_heights[obj_type] * sizes[size]) / 2)
+                rotation = (0, 0, np.random.uniform(0, 360))
+                obj = SceneObject(obj_type, f"obj_{obj_type}_{i}", mtl, (*(np.array(colors[color]) / 255), 1), sizes[size], location, rotation)
+                if not check_collision(objects, obj, shape_radius):
+                    break
+                if j >= 19:
+                    return self.generate_scene(num_objects, shape_heights, shape_radius)
+            objects.append(obj)
         self.objects = objects
         self.scene = Scene(objects)
 
@@ -48,6 +55,7 @@ class Generator:
             self.render.set_object_location(obj.name, obj.location)
             self.render.rotate_object(obj.name, obj.rotation)
             self.render.zoom_object(obj.name, obj.scale)
+            # bpy.context.view_layer.update()
 
         if self.scene.camera_location is not None:
             self.render.set_camera_location(self.scene.camera_location)
@@ -62,23 +70,34 @@ class Generator:
         if list_object_type is None:
             list_object_type = ["SmoothCube_v2", "SmoothCylinder", "Sphere"]
 
-        before = render.list_object_names()
         result = {}
         for obj_type in list_object_type:
             render.load_object_auto(obj_type, obj_type)
             obj = render.get_object(obj_type)
             result[obj_type] = obj.dimensions.z
             render.unload_objects()
-        after = render.list_object_names()
-        logger.info(f"Before: {before}")
-        logger.info(f"After: {after}")
+        return result
+
+    @staticmethod
+    def calculate_shape_radius(render: Render, list_object_type=None):
+        if list_object_type is None:
+            list_object_type = ["SmoothCube_v2", "SmoothCylinder", "Sphere"]
+
+        result = {}
+        for obj_type in list_object_type:
+            render.load_object_auto(obj_type, obj_type)
+            obj = render.get_object(obj_type)
+            result[obj_type] = calculate_horizontal_max_radius(obj)
+            render.unload_objects()
+
         return result
 
     def run(self):
         shape_heights = self.calculate_all_shape_height(self.render)
+        shape_radius = self.calculate_shape_radius(self.render)
         self.render.set_render_args(self.config.engine, self.config.resolution, self.config.resolution_percentage, self.config.samples, self.config.use_gpu, self.config.use_adaptive_sampling)
         for i in tqdm(range(self.config.num_images), desc="Rendering"):
-            self.generate_scene(self.config.num_objects, shape_heights)
+            self.generate_scene(self.config.num_objects, shape_heights, shape_radius)
             self.render_scene(os.path.abspath(os.path.join(self.config.output_dir, f"output_{i}.png")))
             self.render.unload_objects()
         logger.info(f"Rendered {self.config.num_images} images")

@@ -3,10 +3,11 @@ import shutil
 import sys
 from contextlib import contextmanager
 
-import bpy
 import numpy as np
 from loguru import logger
+import bpy
 
+from mathutils import Vector
 
 @contextmanager
 def redirect_stdout(enable: bool = True, target=os.devnull):

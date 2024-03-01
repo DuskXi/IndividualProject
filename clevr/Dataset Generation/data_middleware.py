@@ -1,3 +1,6 @@
+from geometry_tools import check_collision
+
+
 class SceneObject(dict):
     model_name: str
     name: str
