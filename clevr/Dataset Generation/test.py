@@ -4,7 +4,7 @@ import traceback
 import unittest
 from loguru import logger
 
-from gen import SceneObject, Scene, render_scene
+from gen import SceneObject, Scene, render_scene, calculate_all_shape_height, random_scene
 
 
 class DatasetGeneration(unittest.TestCase):
@@ -294,6 +294,61 @@ class DatasetGeneration(unittest.TestCase):
         scene = Scene(objects, None, None)
         render.set_render_args(samples=2048, resolution=(480 * 2, 320 * 2))
         render_scene(scene, render, os.path.join(runtime_path, "output-5.png"))
+        self.assertEqual(True, True)
+
+    def test_calculate_height_of_model(self):
+        runtime_path = os.path.abspath(os.getcwd())
+        scene_blend = 'data/base_scene.blend'
+        object_blend = 'data/shapes/SmoothCube_v2.blend'
+        # mtl_blend = 'data/materials/Rubber.blend'
+
+        mtl_name = 'BMD_Rubber_0004'
+        # mtl_name = 'Material'
+        obj_name = 'SmoothCube_v2'
+
+        import bpy
+        from gen import Render
+
+        # import logging
+        # logging.basicConfig(level=logging.WARNING)
+
+        render = Render(scene_blend, 'data/shapes', 'data/materials')
+        render.init_render()
+
+        # render.load_object_auto(obj_name, 'box1')
+        # obj = bpy.data.objects['box1']
+        # logger.info(f"Object box1 height: {obj.dimensions.z}")
+
+        shape_height = calculate_all_shape_height(render)
+
+        logger.info(f"Shape height: {shape_height}")
+
+        self.assertEqual(True, True)
+
+    def test_random_render(self):
+        runtime_path = os.path.abspath(os.getcwd())
+        scene_blend = 'data/base_scene.blend'
+        object_blend = 'data/shapes/SmoothCube_v2.blend'
+        # mtl_blend = 'data/materials/Rubber.blend'
+
+        mtl_name = 'BMD_Rubber_0004'
+        # mtl_name = 'Material'
+        obj_name = 'SmoothCube_v2'
+
+        import bpy
+        from gen import Render
+
+        # import logging
+        # logging.basicConfig(level=logging.WARNING)
+
+        render = Render(scene_blend, 'data/shapes', 'data/materials')
+        render.init_render()
+
+        shape_height = calculate_all_shape_height(render)
+        scene: Scene = random_scene(6, shape_height)
+        render.set_render_args(samples=2048, resolution=(480 * 2, 320 * 2))
+        render_scene(scene, render, os.path.join(runtime_path, "output-6.png"))
+
         self.assertEqual(True, True)
 
 

@@ -61,6 +61,7 @@ class Render:
             for obj in data_to.objects:
                 if obj is not None:
                     bpy.context.collection.objects.link(obj)
+                    self.loaded_objects.append(obj.name)
         elif type(obj_file) == int:
             obj_files = os.listdir(self.object_dir)
             obj_files = [os.path.join(self.object_dir, f) for f in obj_files if f.endswith(".blend")]
@@ -69,10 +70,11 @@ class Render:
             object_blend = obj_files[obj_file]
             with bpy.data.libraries.load(object_blend, link=False) as (data_from, data_to):
                 data_to.objects = [name for name in data_from.objects]
-                self.loaded_objects.extend(data_to.objects)
+                # self.loaded_objects.extend(data_to.objects)
             for obj in data_to.objects:
                 if obj is not None:
                     bpy.context.collection.objects.link(obj)
+                    self.loaded_objects.append(obj.name)
         else:
             raise ValueError("Invalid object file")
 
@@ -86,13 +88,14 @@ class Render:
                 if obj is not None and obj.name.startswith(target_name):
                     bpy.context.collection.objects.link(obj)
                     obj.name = new_name
-            self.loaded_objects.extend(data_to.objects)
+                if obj is not None:
+                    self.loaded_objects.append(obj.name)
 
     def apply_material(self, obj: str, mtl: str, color: tuple = None):
-        # if obj not in self.loaded_objects:
-        #     raise ValueError("Object not found")
-        # if mtl not in self.loaded_materials:
-        #     raise ValueError("Material not found")
+        if obj not in self.loaded_objects:
+            raise ValueError("Object not found")
+        if mtl not in self.loaded_materials:
+            raise ValueError("Material not found")
         material = self.get_mtl(mtl, color)
         object_3d = bpy.data.objects[obj]
         if object_3d.data.materials:
@@ -121,30 +124,30 @@ class Render:
             return material
 
     def set_object_location(self, obj: str, location: tuple):
-        # if obj not in self.loaded_objects:
-        #     raise ValueError("Object not found")
+        if obj not in self.loaded_objects:
+            raise ValueError("Object not found")
         if len(location) != 3:
             raise ValueError("Invalid location")
         object_3d = bpy.data.objects[obj]
         object_3d.location = location
 
     def offset_object_location(self, obj: str, offset: tuple):
-        # if obj not in self.loaded_objects:
-        #     raise ValueError("Object not found")
+        if obj not in self.loaded_objects:
+            raise ValueError("Object not found")
         if len(offset) != 3:
             raise ValueError("Invalid offset")
         object_3d = bpy.data.objects[obj]
         object_3d.location = np.add(object_3d.location, offset)
 
     def zoom_object(self, obj: str, zoom: float):
-        # if obj not in self.loaded_objects:
-        #     raise ValueError("Object not found")
+        if obj not in self.loaded_objects:
+            raise ValueError("Object not found")
         object_3d = bpy.data.objects[obj]
         object_3d.scale = (zoom, zoom, zoom)
 
     def rotate_object(self, obj: str, rotation: tuple):
-        # if obj not in self.loaded_objects:
-        #     raise ValueError("Object not found")
+        if obj not in self.loaded_objects:
+            raise ValueError("Object not found")
         if len(rotation) != 3:
             raise ValueError("Invalid rotation")
         object_3d = bpy.data.objects[obj]
@@ -170,6 +173,7 @@ class Render:
     def unload_objects(self):
         for obj in self.loaded_objects:
             bpy.data.objects.remove(bpy.data.objects[obj])
+        self.loaded_objects = []
 
     @staticmethod
     def reset_scene():
@@ -213,6 +217,10 @@ class Render:
     @staticmethod
     def get_material(name):
         return bpy.data.materials.get(name)
+
+    @staticmethod
+    def get_object(name):
+        return bpy.data.objects.get(name)
 
     @staticmethod
     def print_objects():
@@ -276,3 +284,43 @@ def render_scene(scene: Scene, render: Render, output_path="output.png", file_fo
     render.set_render_output(output_path, file_format)
 
     render.render_scene()
+
+
+def calculate_all_shape_height(render: Render, list_object_type=None):
+    if list_object_type is None:
+        list_object_type = ["SmoothCube_v2", "SmoothCylinder", "Sphere"]
+
+    before = render.list_object_names()
+    result = {}
+    for obj_type in list_object_type:
+        render.load_object_auto(obj_type, obj_type)
+        obj = render.get_object(obj_type)
+        result[obj_type] = obj.dimensions.z
+        render.unload_objects()
+    after = render.list_object_names()
+    logger.info(f"Before: {before}")
+    logger.info(f"After: {after}")
+    return result
+
+
+def random_scene(num_objects, shape_heights):
+    list_object_type = ["SmoothCube_v2", "SmoothCylinder", "Sphere"]
+    list_material = ["BMD_Rubber_0004", "Material"]
+    colors = {
+        "gray": [87, 87, 87], "red": [173, 35, 35], "blue": [42, 75, 215],
+        "green": [29, 105, 20], "brown": [129, 74, 25], "purple": [129, 38, 192],
+        "cyan": [41, 208, 208], "yellow": [255, 238, 51]
+    }
+    sizes = {"large": 0.7, "small": 0.35}
+    horizontal_offset_range = (-3, 3)
+    objects: list[SceneObject] = []
+    for i in range(num_objects):
+        obj_type = np.random.choice(list_object_type)
+        mtl = np.random.choice(list_material)
+        color = np.random.choice(list(colors.keys()))
+        size = np.random.choice(list(sizes.keys()))
+        location = (np.random.uniform(*horizontal_offset_range), np.random.uniform(*horizontal_offset_range), (shape_heights[obj_type] * sizes[size]) / 2)
+        rotation = (0, 0, np.random.uniform(0, 360))
+        objects.append(SceneObject(obj_type, f"obj_{obj_type}_{i}", mtl, (*(np.array(colors[color]) / 255), 1), sizes[size], location, rotation))
+
+    return Scene(objects)
