@@ -1,7 +1,14 @@
+import os
+import sys
+
 from generator import Generator
 from config import Config
 
 import argparse
+from rich.logging import RichHandler
+from loguru import logger
+
+logger.configure(handlers=[{"sink": RichHandler(), "format": "{message}"}])
 
 
 def main(args):

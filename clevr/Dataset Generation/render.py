@@ -1,13 +1,39 @@
 import os
 import shutil
+import sys
+from contextlib import contextmanager
 
 import bpy
 import numpy as np
 from loguru import logger
 
 
+@contextmanager
+def redirect_stdout(enable: bool = True, target=os.devnull):
+    if not enable:
+        # If redirection is not enabled, do nothing and exit the context manager
+        yield
+        return
+
+    original_stdout_fd = sys.stdout.fileno()
+
+    def _redirect_stdout(to_target):
+        sys.stdout.close()
+        os.dup2(to_target.fileno(), original_stdout_fd)
+        sys.stdout = os.fdopen(original_stdout_fd, 'w')
+
+    with os.fdopen(os.dup(original_stdout_fd), 'w') as old_stdout:
+        with open(target, 'w') as new_stdout:
+            _redirect_stdout(to_target=new_stdout)
+            try:
+                yield
+            finally:
+                _redirect_stdout(to_target=old_stdout)
+
+
 class Render:
-    def __init__(self, scene_file, object_dir, material_dir, blender_bin=None):
+    def __init__(self, scene_file, object_dir, material_dir, blender_bin=None, blender_log_suppress=True):
+        self.blender_log_suppress = blender_log_suppress
         if blender_bin:
             self.blender_bin = blender_bin
         else:
@@ -190,9 +216,9 @@ class Render:
                     device.use = True
             bpy.context.scene.cycles.device = "GPU"
 
-    @staticmethod
-    def render_scene():
-        bpy.ops.render.render(write_still=True)
+    def render_scene(self):
+        with redirect_stdout(self.blender_log_suppress):
+            bpy.ops.render.render(write_still=True)
 
     @staticmethod
     def set_render_output(output_path="output.png", file_format="PNG"):

@@ -3,14 +3,11 @@ import os
 import numpy as np
 
 from loguru import logger
-from rich.logging import RichHandler
 
 from config import Config
 from data_middleware_ import SceneObject, Scene
 from render import Render
-from tqdm import tqdm
-
-logger.configure(handlers=[{"sink": RichHandler(), "format": "{message}"}])
+from tqdm.rich import trange, tqdm
 
 
 class Generator:
@@ -18,7 +15,7 @@ class Generator:
 
     def __init__(self, config: Config):
         self.config = config
-        self.render = Render(config.scene_blend_file, config.object_dir, config.material_dir)
+        self.render = Render(config.scene_blend_file, config.object_dir, config.material_dir, blender_log_suppress=config.blender_log_suppress)
         self.render.init_render()
         self.objects: list[SceneObject] = []
 

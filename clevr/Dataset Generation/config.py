@@ -22,6 +22,9 @@ class Config(dict):
     num_objects: int = 5
     num_images: int = 10
 
+    # other options
+    blender_log_suppress: bool = True
+
     def __init__(self, **kwargs):
         data_dict = {
             'properties_file': kwargs.get('properties_file', self.properties_file),
@@ -39,6 +42,8 @@ class Config(dict):
 
             'num_objects': kwargs.get('num_objects', self.num_objects),
             'num_images': kwargs.get('num_images', self.num_images),
+
+            'blender_log_suppress': kwargs.get('blender_log_suppress', self.blender_log_suppress)
         }
         super().__init__(data_dict)
         for k, v in data_dict.items():
