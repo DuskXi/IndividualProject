@@ -1,4 +1,5 @@
 import json
+import os
 
 
 class Config(dict):
@@ -43,8 +44,8 @@ class Config(dict):
         for k, v in data_dict.items():
             setattr(self, k, v)
 
-    def save(self, path):
-        with open(path, 'w') as f:
+    def save(self, path, encoding='utf-8'):
+        with open(path, 'w', encoding=encoding) as f:
             json.dump(self, f, indent=4)
         return self
 
@@ -57,3 +58,15 @@ class Config(dict):
     @staticmethod
     def from_json(s):
         return Config(**json.loads(s))
+
+    @staticmethod
+    def from_file(path, encoding='utf-8'):
+        if not os.path.exists(path):
+            with open(path, 'w', encoding=encoding) as f:
+                json.dump(Config().__dict__, f, indent=4)
+        with open(path, 'r', encoding=encoding) as f:
+            data = json.load(f)
+            config = Config(**data)
+            if json.dumps(config) != json.dumps(data):
+                config.save(path)
+            return config
