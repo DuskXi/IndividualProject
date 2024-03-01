@@ -1,10 +1,13 @@
+import json
 import os
 import sys
 import traceback
 import unittest
 from loguru import logger
 
-from gen import SceneObject, Scene, render_scene, calculate_all_shape_height, random_scene
+from config import Config
+from gen import render_scene, random_scene, Generator
+from data_middleware_ import SceneObject, Scene
 
 
 class DatasetGeneration(unittest.TestCase):
@@ -140,7 +143,7 @@ class DatasetGeneration(unittest.TestCase):
         mtl_name = 'BMD_Rubber_0004'
         obj_name = 'SmoothCube_v2'
 
-        from gen import Render
+        from render import Render
 
         # import logging
         # logging.basicConfig(level=logging.WARNING)
@@ -193,7 +196,7 @@ class DatasetGeneration(unittest.TestCase):
         obj_name = 'SmoothCube_v2'
 
         import bpy
-        from gen import Render
+        from render import Render
 
         # import logging
         # logging.basicConfig(level=logging.WARNING)
@@ -247,7 +250,7 @@ class DatasetGeneration(unittest.TestCase):
         obj_name = 'SmoothCube_v2'
 
         import bpy
-        from gen import Render
+        from render import Render
 
         # import logging
         # logging.basicConfig(level=logging.WARNING)
@@ -279,7 +282,7 @@ class DatasetGeneration(unittest.TestCase):
         obj_name = 'SmoothCube_v2'
 
         import bpy
-        from gen import Render
+        from render import Render
 
         # import logging
         # logging.basicConfig(level=logging.WARNING)
@@ -307,7 +310,7 @@ class DatasetGeneration(unittest.TestCase):
         obj_name = 'SmoothCube_v2'
 
         import bpy
-        from gen import Render
+        from render import Render
 
         # import logging
         # logging.basicConfig(level=logging.WARNING)
@@ -319,7 +322,7 @@ class DatasetGeneration(unittest.TestCase):
         # obj = bpy.data.objects['box1']
         # logger.info(f"Object box1 height: {obj.dimensions.z}")
 
-        shape_height = calculate_all_shape_height(render)
+        shape_height = Generator.calculate_all_shape_height(render)
 
         logger.info(f"Shape height: {shape_height}")
 
@@ -335,8 +338,11 @@ class DatasetGeneration(unittest.TestCase):
         # mtl_name = 'Material'
         obj_name = 'SmoothCube_v2'
 
+        with open("data/properties.json", 'w') as f:
+            properties = json.load(f)
+
         import bpy
-        from gen import Render
+        from render import Render
 
         # import logging
         # logging.basicConfig(level=logging.WARNING)
@@ -344,11 +350,17 @@ class DatasetGeneration(unittest.TestCase):
         render = Render(scene_blend, 'data/shapes', 'data/materials')
         render.init_render()
 
-        shape_height = calculate_all_shape_height(render)
+        shape_height = Generator.calculate_all_shape_height(render)
         scene: Scene = random_scene(6, shape_height)
         render.set_render_args(samples=2048, resolution=(480 * 2, 320 * 2))
         render_scene(scene, render, os.path.join(runtime_path, "output-6.png"))
 
+        self.assertEqual(True, True)
+
+    def test_oop_render(self):
+        config = Config()
+        generator = Generator(config)
+        generator.run()
         self.assertEqual(True, True)
 
 

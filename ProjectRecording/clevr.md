@@ -69,3 +69,4 @@ Consider[0]: due to the code (`facebookresearch/clevr-dataset-gen/blob/main/imag
 ---
 
 1. Log[0]: Successfully tested the entire random scene generation rendering process
+2. Log[0]: Continue to wrap the entire generation task into the generator and equip it with Config processing tools.
