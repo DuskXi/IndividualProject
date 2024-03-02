@@ -76,3 +76,4 @@ Consider[0]: due to the code (`facebookresearch/clevr-dataset-gen/blob/main/imag
 5. Log[0]: Successfully conducted technical verification of the bounding box algorithm.
 6. Log[0]: Implements collision detection during scene generation, reduces unnecessary calculations to a minimum, and avoids clevr's original generation code that requires blender to run additional unnecessary calculations while rendering.
 7. Log[0]: It realizes the calculation of the proportion of non-background pixels of each object in its own frame based on its own rasterization results, so that the object's occlusion rate can be calculated. This can be used as a threshold to filter out inappropriate data.
+8. Log[0]: Successfully migrated relative position calculation code to new code.

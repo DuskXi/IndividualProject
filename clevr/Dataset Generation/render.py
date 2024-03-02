@@ -9,6 +9,7 @@ import bpy
 
 from mathutils import Vector
 
+
 @contextmanager
 def redirect_stdout(enable: bool = True, target=os.devnull):
     if not enable:
@@ -251,3 +252,27 @@ class Render:
         logger.info("Objects in scene:")
         for obj in bpy.data.objects:
             logger.info("\t" + obj.name)
+
+    @staticmethod
+    def calculate_plane():
+        # bpy.ops.mesh.primitive_plane_add(radius=5)
+        # plane = bpy.context.object
+        camera = bpy.data.objects["Camera"]
+        # plane_normal = plane.data.vertices[0].normal
+        plane_normal = Vector((0, 0, 1))
+        cam_behind = camera.matrix_world.to_quaternion() @ Vector((0, 0, -1))
+        cam_left = camera.matrix_world.to_quaternion() @ Vector((-1, 0, 0))
+        cam_up = camera.matrix_world.to_quaternion() @ Vector((0, 1, 0))
+        plane_behind = (cam_behind - cam_behind.project(plane_normal)).normalized()
+        plane_left = (cam_left - cam_left.project(plane_normal)).normalized()
+        plane_up = cam_up.project(plane_normal).normalized()
+
+        # bpy.data.objects.remove(plane)
+        return {
+            "behind": tuple(plane_behind),
+            "front": tuple(-plane_behind),
+            "left": tuple(plane_left),
+            "right": tuple(-plane_left),
+            "above": tuple(plane_up),
+            "below": tuple(-plane_up)
+        }

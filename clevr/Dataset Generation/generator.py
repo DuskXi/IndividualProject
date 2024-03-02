@@ -1,3 +1,4 @@
+import json
 import os
 
 import bpy
@@ -24,6 +25,8 @@ class Generator:
         self.objects: list[SceneObject] = []
 
     def generate_scene(self, num_objects, shape_heights, shape_radius):
+        shape_names = {"SmoothCube_v2": "cube", "SmoothCylinder": "cylinder", "Sphere": "sphere"}
+        mtl_names = {"BMD_Rubber_0004": "rubber", "Material": "metal"}
         list_object_type = ["SmoothCube_v2", "SmoothCylinder", "Sphere"]
         list_material = ["BMD_Rubber_0004", "Material"]
         colors = {
@@ -42,7 +45,7 @@ class Generator:
                 size = np.random.choice(list(sizes.keys()))
                 location = (np.random.uniform(*horizontal_offset_range), np.random.uniform(*horizontal_offset_range), (shape_heights[obj_type] * sizes[size]) / 2)
                 rotation = (0, 0, np.random.uniform(0, 360))
-                obj = SceneObject(obj_type, f"obj_{obj_type}_{i}", mtl, (*(np.array(colors[color]) / 255), 1), sizes[size], location, rotation)
+                obj = SceneObject(obj_type, f"obj_{obj_type}_{i}", mtl, (*(np.array(colors[color]) / 255), 1), sizes[size], location, rotation, size, color, shape_names[obj_type], mtl_names[mtl])
                 if not check_collision(objects, obj, shape_radius):
                     break
                 if j >= 19:
@@ -79,6 +82,8 @@ class Generator:
 
         self.render.render_scene()
         timer.stop().print("Run Render", level="debug").reset().start()
+
+        return object_reverse_occlusion_rate
 
     @staticmethod
     def calculate_all_shape_height(render: Render, list_object_type=None):
@@ -117,19 +122,61 @@ class Generator:
             y=320)
         return projection_matrix @ view_matrix @ model_matrix
 
+    @staticmethod
+    def scene_to_clevr_json_dict(scene: Scene, directions):
+        data = scene.to_dict()
+        for i, obj in enumerate(data['objects']):
+            logger.debug(f"Shape[{i}]: {obj['model_name']}-Color: {obj['color']}-Material: {obj['mtl_name']}")
+        logger.debug("Relationship data:")
+        relationships = Generator.compute_all_relationships(data, directions)
+        data['relationships'] = relationships
+        data['directions'] = directions
+        return data
+
+    @staticmethod
+    def compute_all_relationships(scene_struct, directions, eps=0.2):
+        all_relationships = {}
+        for name, direction_vec in directions.items():
+            if name == 'above' or name == 'below': continue
+            all_relationships[name] = []
+            for i, obj1 in enumerate(scene_struct['objects']):
+                coords1 = obj1['location']
+                related = set()
+                for j, obj2 in enumerate(scene_struct['objects']):
+                    if obj1 == obj2: continue
+                    coords2 = obj2['location']
+                    diff = [coords2[k] - coords1[k] for k in [0, 1, 2]]
+                    dot = sum(diff[k] * direction_vec[k] for k in [0, 1, 2])
+                    if dot > eps:
+                        related.add(j)
+                all_relationships[name].append(sorted(list(related)))
+        return all_relationships
+
     def run(self):
         shape_heights = self.calculate_all_shape_height(self.render)
         shape_radius = self.calculate_shape_radius(self.render)
         self.render.set_render_args(self.config.engine, self.config.resolution, self.config.resolution_percentage, self.config.samples, self.config.use_gpu, self.config.use_adaptive_sampling)
         timer = Timer()
+        scenes = {
+            "scenes": []
+        }
         for i in tqdm(range(self.config.num_images), desc="Rendering"):
             timer.reset().start()
             self.generate_scene(self.config.num_objects, shape_heights, shape_radius)
             timer.stop().print("Generate Scene").reset().start()
-            self.render_scene(os.path.abspath(os.path.join(self.config.output_dir, f"output_{i}.png")))
+            object_reverse_occlusion_rate = self.render_scene(os.path.abspath(os.path.join(self.config.output_dir, f"output_{i}.png")))
             timer.stop().print("Render").reset().start()
+            directions = self.render.calculate_plane()
+            scene_dict = self.scene_to_clevr_json_dict(self.scene, directions)
+            scene_dict['image_index'] = i
+            scene_dict['image_filename'] = f"output_{i}.png"
+            scene_dict['object_reverse_occlusion_rate'] = object_reverse_occlusion_rate
+            scenes["scenes"].append(scene_dict)
             self.render.unload_objects()
         logger.info(f"Rendered {self.config.num_images} images")
+        with open(os.path.join(self.config.output_dir, "scenes.json"), "w") as f:
+            json.dump(scenes, f, indent=4)
+        logger.info(f"Saved scenes to {os.path.join(self.config.output_dir, 'scenes.json')}")
 
 
 def render_scene(scene: Scene, render: Render, output_path="output.png", file_format="PNG"):

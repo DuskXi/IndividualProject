@@ -28,8 +28,6 @@ def calculate_bounding_box(obj, mvp_matrix, reverse=False):
     return xmin, xmax, ymin, ymax, zmin, zmax
 
 
-# TODO: rasterization
-
 @numba.njit
 def is_inside(v1, v2, v3, p):
     return edge_function(v1, v2, p) >= 0 and edge_function(v2, v3, p) >= 0 and edge_function(v3, v1, p) >= 0
@@ -135,6 +133,7 @@ def draw_triangles(frame, z_buffer, triangles, width, height):
                     if z > z_buffer[y, x]:
                         z_buffer[y, x] = z
                         frame[y, x] = color
+
 
 def calculate_horizontal_max_radius(obj):
     if obj and hasattr(obj, 'bound_box'):
