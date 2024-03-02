@@ -20,12 +20,28 @@ def get_bounding_box(ndc_vertices):
     return xmin, xmax, ymin, ymax, zmin, zmax
 
 
-def calculate_bounding_box(obj, mvp_matrix, reverse=False):
+def calculate_bounding_box(obj, mvp_matrix, reverseX=False, reverseY=False, reverseZ=False):
     ndc_vertices = projection(obj, mvp_matrix)
     xmin, xmax, ymin, ymax, zmin, zmax = get_bounding_box(ndc_vertices)
-    if reverse:
-        return xmax * -1, xmin * -1, ymax * -1, ymin * -1, zmin, zmax
+    if reverseY:
+        ymin, ymax = -ymax, -ymin
+    if reverseX:
+        xmin, xmax = -xmax, -xmin
+    if reverseZ:
+        zmin, zmax = -zmax, -zmin
     return xmin, xmax, ymin, ymax, zmin, zmax
+
+
+def calculate_bounding_box_dict(obj, mvp_matrix, reverseX=False, reverseY=False, reverseZ=False):
+    xmin, xmax, ymin, ymax, zmin, zmax = calculate_bounding_box(obj, mvp_matrix, reverseX, reverseY, reverseZ)
+    return {
+        "xmin": xmin,
+        "xmax": xmax,
+        "ymin": ymin,
+        "ymax": ymax,
+        "zmin": zmin,
+        "zmax": zmax
+    }
 
 
 @numba.njit

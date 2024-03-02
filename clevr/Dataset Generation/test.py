@@ -12,6 +12,9 @@ from generator import render_scene, random_scene, Generator
 from data_middleware import SceneObject, Scene
 from mathutils import Vector
 
+from geometry_tools import calculate_bounding_box
+from utils import show_bounding_box_image
+
 
 class DatasetGeneration(unittest.TestCase):
     def test_blender_path(self):
@@ -391,13 +394,13 @@ class DatasetGeneration(unittest.TestCase):
         render.zoom_object("SmoothCube_v2", 0.75)
         obj = render.get_object("SmoothCube_v2")
 
-        vertices = obj.data.vertices
+        # vertices = obj.data.vertices
 
-        logger.info(f"Vertices[0]: x: {vertices[0].co.x}, y: {vertices[0].co.y}, z: {vertices[0].co.z}")
+        # logger.info(f"Vertices[0]: x: {vertices[0].co.x}, y: {vertices[0].co.y}, z: {vertices[0].co.z}")
 
         # to 4d
 
-        vertices = [Vector((v.co.x, v.co.y, v.co.z, 1.0)) for v in vertices]
+        # vertices = [Vector((v.co.x, v.co.y, v.co.z, 1.0)) for v in vertices]
 
         logger.info(f"Build mvp matrix")
 
@@ -410,10 +413,12 @@ class DatasetGeneration(unittest.TestCase):
         mvp_matrix = projection_matrix @ view_matrix @ model_matrix
 
         logger.info(f"Calculate vertices")
-        ndc_vertices = [mvp_matrix @ v for v in vertices]
-        ndc_vertices = [(v / v.w) * Vector((1, -1, 1, 1)) for v in ndc_vertices]
-        xmin, xmax = min(ndc_vertices, key=lambda v: v.x).x, max(ndc_vertices, key=lambda v: v.x).x
-        ymin, ymax = min(ndc_vertices, key=lambda v: v.y).y, max(ndc_vertices, key=lambda v: v.y).y
+        # ndc_vertices = [mvp_matrix @ v for v in vertices]
+        # ndc_vertices = [(v / v.w) * Vector((1, -1, 1, 1)) for v in ndc_vertices]
+        # xmin, xmax = min(ndc_vertices, key=lambda v: v.x).x, max(ndc_vertices, key=lambda v: v.x).x
+        # ymin, ymax = min(ndc_vertices, key=lambda v: v.y).y, max(ndc_vertices, key=lambda v: v.y).y
+
+        xmin, xmax, ymin, ymax, zmin, zmax = calculate_bounding_box(obj, mvp_matrix, reverseY=True)
 
         logger.info(f"xmin: {xmin}, xmax: {xmax}, ymin: {ymin}, ymax: {ymax}")
         screen_box = [
@@ -434,6 +439,11 @@ class DatasetGeneration(unittest.TestCase):
         draw.rectangle([screen_box[0], screen_box[2], screen_box[1], screen_box[3]], outline="red")
         image.save(os.path.join(runtime_path, "output-7.png"))
 
+        self.assertEqual(True, True)
+
+    def test_image_tool(self):
+        for i in range(5):
+            show_bounding_box_image("output", i)
         self.assertEqual(True, True)
 
 

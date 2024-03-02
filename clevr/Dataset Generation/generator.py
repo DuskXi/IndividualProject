@@ -8,7 +8,7 @@ from loguru import logger
 
 from config import Config
 from data_middleware import SceneObject, Scene
-from geometry_tools import calculate_horizontal_max_radius, check_collision, simple_rasterization
+from geometry_tools import calculate_horizontal_max_radius, check_collision, simple_rasterization, calculate_bounding_box, calculate_bounding_box_dict
 from render import Render
 from tqdm.rich import trange, tqdm
 
@@ -82,8 +82,10 @@ class Generator:
 
         self.render.render_scene()
         timer.stop().print("Run Render", level="debug").reset().start()
+        bounding_boxes = [calculate_bounding_box_dict(obj, mvp_matrix, reverseY=True) for i, (obj, mvp_matrix) in enumerate(zip(objects, mvp_matrices))]
+        timer.stop().print("Calculate bounding boxes", level="debug").reset().start()
 
-        return object_reverse_occlusion_rate
+        return object_reverse_occlusion_rate, bounding_boxes
 
     @staticmethod
     def calculate_all_shape_height(render: Render, list_object_type=None):
@@ -126,7 +128,7 @@ class Generator:
     def scene_to_clevr_json_dict(scene: Scene, directions):
         data = scene.to_dict()
         for i, obj in enumerate(data['objects']):
-            logger.debug(f"Shape[{i}]: {obj['model_name']}-Color: {obj['color']}-Material: {obj['mtl_name']}")
+            logger.debug(f"Shape[{i}]: {obj['shape']}; Color: {obj['color_name']}; Material: {obj['material']}; Size: {obj['size_name']}")
         logger.debug("Relationship data:")
         relationships = Generator.compute_all_relationships(data, directions)
         data['relationships'] = relationships
@@ -164,13 +166,15 @@ class Generator:
             timer.reset().start()
             self.generate_scene(self.config.num_objects, shape_heights, shape_radius)
             timer.stop().print("Generate Scene").reset().start()
-            object_reverse_occlusion_rate = self.render_scene(os.path.abspath(os.path.join(self.config.output_dir, f"output_{i}.png")))
+            object_reverse_occlusion_rate, bounding_boxes = self.render_scene(os.path.abspath(os.path.join(self.config.output_dir, f"output_{i}.png")))
             timer.stop().print("Render").reset().start()
             directions = self.render.calculate_plane()
             scene_dict = self.scene_to_clevr_json_dict(self.scene, directions)
             scene_dict['image_index'] = i
             scene_dict['image_filename'] = f"output_{i}.png"
             scene_dict['object_reverse_occlusion_rate'] = object_reverse_occlusion_rate
+            for i in range(len(scene_dict['objects'])):
+                scene_dict['objects'][i]['bounding_box'] = bounding_boxes[i]
             scenes["scenes"].append(scene_dict)
             self.render.unload_objects()
         logger.info(f"Rendered {self.config.num_images} images")
