@@ -78,3 +78,10 @@ Consider[0]: due to the code (`facebookresearch/clevr-dataset-gen/blob/main/imag
 7. Log[0]: It realizes the calculation of the proportion of non-background pixels of each object in its own frame based on its own rasterization results, so that the object's occlusion rate can be calculated. This can be used as a threshold to filter out inappropriate data.
 8. Log[0]: Successfully migrated relative position calculation code to new code.
 9. Log[0]: Implemented bounding box data comes with output, as well as a bounding box drawing tool (mainly to visually verify the accuracy of the bounding box position). The bounding box takes and outputs the original center coordinate ndc data (including the z-axis).
+
+### 2024-03-02:
+
+---
+
+#### Plan Status
+1. Log[0]: The image generation code of the clevr dataset has been refactored to blender 3.6, and more information and object bounding box data output have been added.
