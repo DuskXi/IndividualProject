@@ -1,6 +1,6 @@
 import os
 import sys
-
+import faulthandler
 from generator import Generator
 from config import Config
 
@@ -24,4 +24,5 @@ def parse_args():
 
 
 if __name__ == "__main__":
+    faulthandler.enable()
     main(parse_args())

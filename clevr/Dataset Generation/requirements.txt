@@ -2,5 +2,4 @@ bpy==3.6
 loguru
 rich
 tqdm
-numba
 numpy

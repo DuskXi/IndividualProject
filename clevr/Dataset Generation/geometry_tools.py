@@ -1,9 +1,12 @@
+import concurrent.futures
 import math
+import time
 
-import numba
+# import numba
 import numpy as np
 from mathutils import Vector
 from loguru import logger
+import gc
 
 
 def projection(obj, mvp_matrix):
@@ -44,19 +47,27 @@ def calculate_bounding_box_dict(obj, mvp_matrix, reverseX=False, reverseY=False,
     }
 
 
-@numba.njit
-def is_inside(v1, v2, v3, p):
-    return edge_function(v1, v2, p) >= 0 and edge_function(v2, v3, p) >= 0 and edge_function(v3, v1, p) >= 0
-
-
-@numba.njit
-def edge_function(v0, v1, p):
-    return (p[0] - v0[0]) * (v1[1] - v0[1]) - (p[1] - v0[1]) * (v1[0] - v0[0])
-
-
 def quad_to_triangles(quad):
     # 分割四边形为两个三角形
     return [(quad[0], quad[1], quad[2]), (quad[0], quad[2], quad[3])]
+
+
+def simple_rasterization_multiprocess(objects, mvp_matrices, sample_size=32, retry=3):
+    # just use subprocess to call simple_rasterization
+
+    for i in range(retry):
+        with concurrent.futures.ProcessPoolExecutor() as executor:
+            task = executor.submit(simple_rasterization, objects, mvp_matrices, sample_size)
+
+            try:
+                result = task.result()
+                return result
+            except Exception as e:
+                logger.warning(f"Retry {i + 1} failed")
+                logger.error(e)
+                continue
+
+    return None
 
 
 def simple_rasterization(objects, mvp_matrices, sample_size=32):
@@ -85,7 +96,10 @@ def simple_rasterization(objects, mvp_matrices, sample_size=32):
                 quads = [np.array(ndc_vertices[obj.name][i], dtype=np.float64) for i in vertex_indices]
                 for triangle in quad_to_triangles(quads):
                     triangles.append((*triangle, i))
-        draw_triangles(frameBuffer, zBuffer, triangles, width, height)
+        try:
+            draw_triangles(frameBuffer, zBuffer, triangles, width, height)
+        finally:
+            pass
     # statistics
     result = {}
     for i, obj in enumerate(objects):
@@ -97,30 +111,26 @@ def simple_rasterization(objects, mvp_matrices, sample_size=32):
         count_background = np.sum(area == -1)
         # count_background = np.sum(frameBuffer[screen_box[2]:screen_box[3], screen_box[0]:screen_box[1]] == -1)
         count_other = (screen_box[1] - screen_box[0]) * (screen_box[3] - screen_box[2]) - count_background - count_obj
-        pixels_percentage = count_obj / (count_obj + count_other)
+        pixels_percentage = (count_obj / (count_obj + count_other)) if (count_obj + count_other) > 0 else 0
         result[obj.name] = pixels_percentage
-
-    # for k, v in result.items():
-    #     logger.info(f"\t{k}: {v:.2%}")
+    gc.collect()
 
     return result
 
 
-@numba.njit
-def np_dot(a, b):
-    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
+def edge_function(v0, v1, p):
+    return (p[0] - v0[0]) * (v1[1] - v0[1]) - (p[1] - v0[1]) * (v1[0] - v0[0])
 
 
-@numba.njit
 def barycentric_numpy(a: np.ndarray, b: np.ndarray, c: np.ndarray, p: np.ndarray) -> tuple[float, float, float]:
     v0 = b - a
     v1 = c - a
     v2 = p - a
-    d00 = np_dot(v0, v0)
-    d01 = np_dot(v0, v1)
-    d11 = np_dot(v1, v1)
-    d20 = np_dot(v2, v0)
-    d21 = np_dot(v2, v1)
+    d00 = np.dot(v0, v0)
+    d01 = np.dot(v0, v1)
+    d11 = np.dot(v1, v1)
+    d20 = np.dot(v2, v0)
+    d21 = np.dot(v2, v1)
     denom = d00 * d11 - d01 * d01
     v = (d11 * d20 - d01 * d21) / denom
     w = (d00 * d21 - d01 * d20) / denom
@@ -128,10 +138,11 @@ def barycentric_numpy(a: np.ndarray, b: np.ndarray, c: np.ndarray, p: np.ndarray
     return u, v, w
 
 
-# @numba.njit
 def draw_triangles(frame, z_buffer, triangles, width, height):
     for triangle in triangles:
         v1, v2, v3, color = triangle
+        if len(v1) < 3 or len(v1) != len(v2) or len(v1) != len(v3):
+            continue
         min_x = max(int(min(v1[0], v2[0], v3[0])), 0)
         max_x = min(int(max(v1[0], v2[0], v3[0])), width - 1)
         min_y = max(int(min(v1[1], v2[1], v3[1])), 0)

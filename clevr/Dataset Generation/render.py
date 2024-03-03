@@ -5,7 +5,10 @@ from contextlib import contextmanager
 
 import numpy as np
 from loguru import logger
-import bpy
+from multiprocessing import current_process
+
+if current_process().name == 'MainProcess':
+    import bpy
 
 from mathutils import Vector
 

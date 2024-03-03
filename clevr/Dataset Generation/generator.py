@@ -1,14 +1,17 @@
 import json
 import os
 
-import bpy
+from multiprocessing import current_process
+
+if current_process().name == 'MainProcess':
+    import bpy
 import numpy as np
 
 from loguru import logger
 
 from config import Config
 from data_middleware import SceneObject, Scene
-from geometry_tools import calculate_horizontal_max_radius, check_collision, simple_rasterization, calculate_bounding_box, calculate_bounding_box_dict
+from geometry_tools import calculate_horizontal_max_radius, check_collision, simple_rasterization, calculate_bounding_box, calculate_bounding_box_dict, simple_rasterization_multiprocess
 from render import Render
 from tqdm.rich import trange, tqdm
 
@@ -157,12 +160,16 @@ class Generator:
     def run(self):
         shape_heights = self.calculate_all_shape_height(self.render)
         shape_radius = self.calculate_shape_radius(self.render)
-        self.render.set_render_args(self.config.engine, self.config.resolution, self.config.resolution_percentage, self.config.samples, self.config.use_gpu, self.config.use_adaptive_sampling)
         timer = Timer()
         scenes = {
             "scenes": []
         }
-        for i in tqdm(range(self.config.num_images), desc="Rendering"):
+        if os.path.exists(os.path.join(self.config.output_dir, "scenes.json")):
+            with open(os.path.join(self.config.output_dir, "scenes.json"), "r") as f:
+                scenes = json.load(f)
+        start_index = len(scenes["scenes"])
+        for i in tqdm(range(start_index, self.config.num_images), desc="Rendering"):
+            self.render.set_render_args(self.config.engine, self.config.resolution, self.config.resolution_percentage, self.config.samples, self.config.use_gpu, self.config.use_adaptive_sampling)
             timer.reset().start()
             self.generate_scene(self.config.num_objects, shape_heights, shape_radius)
             timer.stop().print("Generate Scene").reset().start()
@@ -172,11 +179,18 @@ class Generator:
             scene_dict = self.scene_to_clevr_json_dict(self.scene, directions)
             scene_dict['image_index'] = i
             scene_dict['image_filename'] = f"output_{i}.png"
-            scene_dict['object_reverse_occlusion_rate'] = object_reverse_occlusion_rate
-            for i in range(len(scene_dict['objects'])):
-                scene_dict['objects'][i]['bounding_box'] = bounding_boxes[i]
+            scene_dict['object_reverse_occlusion_rate'] = object_reverse_occlusion_rate if object_reverse_occlusion_rate is not None else {obj['name']: 0 for obj in scene_dict['objects']}
+            for j in range(len(scene_dict['objects'])):
+                scene_dict['objects'][j]['bounding_box'] = bounding_boxes[j]
             scenes["scenes"].append(scene_dict)
             self.render.unload_objects()
+            if i % 10 == 0:
+                logger.info(f"Resetting blender scene after {i} images rendered")
+                self.render.reset_scene()
+                self.render = Render(self.config.scene_blend_file, self.config.object_dir, self.config.material_dir, blender_log_suppress=self.config.blender_log_suppress)
+                self.render.init_render()
+                with open(os.path.join(self.config.output_dir, "scenes.json"), "w") as f:
+                    json.dump(scenes, f, indent=4)
         logger.info(f"Rendered {self.config.num_images} images")
         with open(os.path.join(self.config.output_dir, "scenes.json"), "w") as f:
             json.dump(scenes, f, indent=4)
