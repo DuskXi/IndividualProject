@@ -7,8 +7,8 @@ from loguru import logger
 from tqdm.rich import tqdm
 from rich.logging import RichHandler
 
-from clevr.location_part.datset import ClevrBoxPositionDataset
-from clevr.location_part.model import Relationship, RelationshipV2
+from clevr.location_part.datset import ClevrBoxPositionDataset, ClevrBoxPositionDatasetV3
+from clevr.location_part.model import Relationship, RelationshipV2, RelationshipV3
 
 logger.configure(handlers=[{"sink": RichHandler(), "format": "{message}"}])
 
@@ -20,6 +20,17 @@ class TestModel(unittest.TestCase):
         pred = model(x)
         pred = pred.argmax(dim=1)
         result = pred.cpu().detach().numpy()
+        self.assertEqual(True, True)
+
+    def test_V3_model_input(self):
+        model = RelationshipV3(5)
+        x = torch.rand(1, 5, 4, dtype=torch.float32)
+        pred = model(x)
+        self.assertEqual(True, True)
+
+    def test_V3_model_dataset(self):
+        dataset = ClevrBoxPositionDatasetV3(r"D:\projects\IndividualProject\clevr\Dataset Generation\output\scenes.json", 5)
+        x, y = dataset[0]
         self.assertEqual(True, True)
 
     def test_dataset(self):
