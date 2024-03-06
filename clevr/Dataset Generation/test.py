@@ -13,7 +13,7 @@ from data_middleware import SceneObject, Scene
 from mathutils import Vector
 
 from geometry_tools import calculate_bounding_box
-from utils import show_bounding_box_image
+from utils import show_bounding_box_image, scene_to_clevr_scene
 
 
 class DatasetGeneration(unittest.TestCase):
@@ -445,6 +445,10 @@ class DatasetGeneration(unittest.TestCase):
         for i in range(5):
             show_bounding_box_image("output", i)
         show_bounding_box_image("output", 3501)
+        self.assertEqual(True, True)
+
+    def test_convert_scene(self):
+        scene_to_clevr_scene("output/scenes.json", "output/clevr_scenes.json")
         self.assertEqual(True, True)
 
 

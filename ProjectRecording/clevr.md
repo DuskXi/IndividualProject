@@ -144,5 +144,10 @@ Consider[3]: Mainly to test model performance and experimental properties.
 
 ---
 
+Plan Name[4]: Implementing NLP: Question->Structured Question.
+Consider[4]: Through research on question generation scripts, it is found that a training data set can be created for text questions -> structured questions, so that the question data can be processed by ILP.
+
+---
+
 #### Plan execute
 1. Log[3]: Successfully built a suggestion interface implemented using Gradio to connect two neural networks.

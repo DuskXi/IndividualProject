@@ -29,3 +29,18 @@ def show_bounding_box_image(output_path, index, headless=False, headless_target_
             plt.show()
         else:
             plt.savefig(headless_target_path)
+
+
+def scene_to_clevr_scene(src, dest, encoding='utf-8'):
+    with open(src, "r", encoding=encoding) as f:
+        data = json.load(f)
+    scenes = data['scenes']
+    for scene in scenes:
+        for obj in scene['objects']:
+            obj['_color'] = obj['color']
+            obj['color'] = obj['color_name']
+            obj['size'] = obj['size_name']
+            obj['3d_coords'] = obj['location']
+
+    with open(dest, "w", encoding=encoding) as f:
+        json.dump(data, f)
