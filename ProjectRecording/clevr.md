@@ -135,3 +135,14 @@ Consider[2]: After a small end-to-end neural network experiment (trying to imple
 4. Log[2]: The model is implemented to simultaneously calculate the relationship adjacency matrix in four directions(30 epoch 97%).
 5. Log[1]: Train a Faster RCNN on the Clevr dataset.
 5. Log[1]: Successfully implemented Fast RCNN's object detection for Clevr, and supports attributes such as color, shape, size, material, etc.
+
+---
+
+#### Plan Created
+Plan Name[3]: Merge object detection network, and relative position network.
+Consider[3]: Mainly to test model performance and experimental properties.
+
+---
+
+#### Plan execute
+1. Log[3]: Successfully built a suggestion interface implemented using Gradio to connect two neural networks.
