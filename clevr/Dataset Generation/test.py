@@ -444,6 +444,7 @@ class DatasetGeneration(unittest.TestCase):
     def test_image_tool(self):
         for i in range(5):
             show_bounding_box_image("output", i)
+        show_bounding_box_image("output", 3501)
         self.assertEqual(True, True)
 
 

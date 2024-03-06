@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 
 from multiprocessing import current_process
 
@@ -48,7 +49,7 @@ class Generator:
                 size = np.random.choice(list(sizes.keys()))
                 location = (np.random.uniform(*horizontal_offset_range), np.random.uniform(*horizontal_offset_range), (shape_heights[obj_type] * sizes[size]) / 2)
                 rotation = (0, 0, np.random.uniform(0, 360))
-                obj = SceneObject(obj_type, f"obj_{obj_type}_{i}", mtl, (*(np.array(colors[color]) / 255), 1), sizes[size], location, rotation, size, color, shape_names[obj_type], mtl_names[mtl])
+                obj = SceneObject(obj_type, f"obj_{obj_type}_{i}", mtl, (*(np.array(colors[color]) / 255), 1), sizes[size], location, rotation, color, size, shape_names[obj_type], mtl_names[mtl])
                 if not check_collision(objects, obj, shape_radius):
                     break
                 if j >= 19:
@@ -128,10 +129,11 @@ class Generator:
         return projection_matrix @ view_matrix @ model_matrix
 
     @staticmethod
-    def scene_to_clevr_json_dict(scene: Scene, directions):
+    def scene_to_clevr_json_dict(scene: Scene, directions, object_reverse_occlusion_rate):
         data = scene.to_dict()
         for i, obj in enumerate(data['objects']):
-            logger.debug(f"Shape[{i}]: {obj['shape']}; Color: {obj['color_name']}; Material: {obj['material']}; Size: {obj['size_name']}")
+            logger.debug(
+                f"Shape[{i}]: {obj['shape']}; Color: {obj['color_name']}; Material: {obj['material']}; Size: {obj['size_name']}; Pixel Occlusion Rate: {object_reverse_occlusion_rate[obj['name']] * 100:.2f}%")
         logger.debug("Relationship data:")
         relationships = Generator.compute_all_relationships(data, directions)
         data['relationships'] = relationships
@@ -168,7 +170,7 @@ class Generator:
             with open(os.path.join(self.config.output_dir, "scenes.json"), "r") as f:
                 scenes = json.load(f)
         start_index = len(scenes["scenes"])
-        for i in tqdm(range(start_index, self.config.num_images), desc="Rendering"):
+        for i in tqdm(range(start_index, self.config.num_images), initial=start_index, total=self.config.num_images, desc="Rendering"):
             self.render.set_render_args(self.config.engine, self.config.resolution, self.config.resolution_percentage, self.config.samples, self.config.use_gpu, self.config.use_adaptive_sampling)
             timer.reset().start()
             self.generate_scene(self.config.num_objects, shape_heights, shape_radius)
@@ -176,7 +178,7 @@ class Generator:
             object_reverse_occlusion_rate, bounding_boxes = self.render_scene(os.path.abspath(os.path.join(self.config.output_dir, f"output_{i}.png")))
             timer.stop().print("Render").reset().start()
             directions = self.render.calculate_plane()
-            scene_dict = self.scene_to_clevr_json_dict(self.scene, directions)
+            scene_dict = self.scene_to_clevr_json_dict(self.scene, directions, object_reverse_occlusion_rate)
             scene_dict['image_index'] = i
             scene_dict['image_filename'] = f"output_{i}.png"
             scene_dict['object_reverse_occlusion_rate'] = object_reverse_occlusion_rate if object_reverse_occlusion_rate is not None else {obj['name']: 0 for obj in scene_dict['objects']}
@@ -189,11 +191,15 @@ class Generator:
                 self.render.reset_scene()
                 self.render = Render(self.config.scene_blend_file, self.config.object_dir, self.config.material_dir, blender_log_suppress=self.config.blender_log_suppress)
                 self.render.init_render()
+                # copy scenes to bak
+                shutil.copy(os.path.join(self.config.output_dir, "scenes.json"), os.path.join(self.config.output_dir, "scenes_bak.json"))
                 with open(os.path.join(self.config.output_dir, "scenes.json"), "w") as f:
-                    json.dump(scenes, f, indent=4)
+                    json_str = json.dumps(scenes, indent=4)
+                    f.write(json_str)
         logger.info(f"Rendered {self.config.num_images} images")
         with open(os.path.join(self.config.output_dir, "scenes.json"), "w") as f:
-            json.dump(scenes, f, indent=4)
+            json_str = json.dumps(scenes, indent=4)
+            f.write(json_str)
         logger.info(f"Saved scenes to {os.path.join(self.config.output_dir, 'scenes.json')}")
 
 

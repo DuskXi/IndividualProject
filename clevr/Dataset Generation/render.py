@@ -69,7 +69,8 @@ class Render:
         self.load_mtl()
 
     def load_scene(self):
-        bpy.ops.wm.open_mainfile(filepath=self.scene_file)
+        with redirect_stdout():
+            bpy.ops.wm.open_mainfile(filepath=self.scene_file)
 
     def load_mtl(self):
         material_files = os.listdir(self.material_dir)
