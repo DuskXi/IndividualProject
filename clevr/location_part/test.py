@@ -7,7 +7,7 @@ from loguru import logger
 from tqdm.rich import tqdm
 from rich.logging import RichHandler
 
-from clevr.location_part.datset import ClevrBoxPositionDataset, ClevrBoxPositionDatasetV3
+from clevr.location_part.dataset import ClevrBoxPositionDataset, ClevrBoxPositionDatasetV3
 from clevr.location_part.model import Relationship, RelationshipV2, RelationshipV3
 
 logger.configure(handlers=[{"sink": RichHandler(), "format": "{message}"}])

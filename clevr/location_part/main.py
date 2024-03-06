@@ -1,7 +1,7 @@
 import numpy as np
 from loguru import logger
 
-from clevr.location_part.datset import ClevrBoxPositionDataset, ClevrBoxPositionDatasetV3
+from clevr.location_part.dataset import ClevrBoxPositionDataset, ClevrBoxPositionDatasetV3
 import torch
 import torch.utils.data
 
