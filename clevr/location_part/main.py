@@ -49,9 +49,33 @@ def main_1():
         progress_epoch.set_postfix({"lr": lr_scheduler.get_last_lr()})
 
 
+def test(model, criterion, test_dataloader):
+    model.eval()
+    losses = []
+    accuracies = []
+    window = 20
+    for i, data in enumerate(test_dataloader, 0):
+        inputs, labels = data
+        inputs, labels = inputs.cuda(), labels['front'].cuda()
+        outputs = model(inputs).squeeze(1)
+        loss = criterion(outputs, labels)
+        losses.append(loss.item())
+        result_binary = torch.where(outputs >= 0.5, torch.tensor(1.0), torch.tensor(0.0))
+        acc = (labels == result_binary).flatten()
+        accuracy = (acc.sum().item() / acc.numel())
+        accuracies.append(accuracy)
+        if len(losses) > window:
+            losses.pop(0)
+            accuracies.pop(0)
+    return np.average(losses), np.average(accuracies) * 100
+
+
 def main_2():
     dataset = ClevrBoxPositionDataset(r"D:\projects\IndividualProject\clevr\Dataset Generation\output\scenes.json", 5)
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=8, shuffle=True)
+    # did not need random split, just give 200 data for test set
+    train_dataset, test_dataset = torch.utils.data.random_split(dataset, [len(dataset) - 200, 200])
+    train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=8, shuffle=True)
+    test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=1, shuffle=True)
 
     model = RelationshipV2(5)
     model.train()
@@ -64,7 +88,7 @@ def main_2():
         losses = []
         accuracies = []
         window = 20
-        for i, data in enumerate(dataloader, 0):
+        for i, data in enumerate(train_dataloader, 0):
             inputs, labels = data
             inputs, labels = inputs.cuda(), labels['front'].cuda()
             optimizer.zero_grad()
@@ -81,6 +105,9 @@ def main_2():
                 losses.pop(0)
                 accuracies.pop(0)
             progress_epoch.set_description(f"Epoch {epoch + 1} loss: {np.average(losses):.4f}, accuracy: {np.average(accuracies) * 100:.4f} %, lr: {lr_scheduler.get_last_lr()}")
+
+        test_loss, test_accuracy = test(model, criterion, test_dataloader)
+        logger.info(f"Test loss: {test_loss:.4f}, accuracy: {test_accuracy:.4f} %")
         lr_scheduler.step()
         progress_epoch.set_postfix({"lr": lr_scheduler.get_last_lr()})
 
