@@ -125,7 +125,13 @@ Consider[2]: After a small end-to-end neural network experiment (trying to imple
 ---
 
 ### 2024-03-06:
+
+---
+
+#### Plan execute
 1. Log[2]: Copy the neural network to RelationshipV2, add dropout and BatchNorm2d layers, and continue training. The accuracy can be increased to 85% (only 20-30epoch is needed)
 2. Log[2]: The neural network is modified to use MSE loss, and the accuracy can be increased to 95% (only 20-30epoch is needed).
 3. Log[2]: Add a test set (which has no intersection with the training set) to increase the credibility of the model. The situation is now very optimistic, and the accuracy can be as high as 98% (35 epoch).
 4. Log[2]: The model is implemented to simultaneously calculate the relationship adjacency matrix in four directions(30 epoch 97%).
+5. Log[1]: Train a Faster RCNN on the Clevr dataset.
+5. Log[1]: Successfully implemented Fast RCNN's object detection for Clevr, and supports attributes such as color, shape, size, material, etc.
