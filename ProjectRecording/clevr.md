@@ -151,3 +151,16 @@ Consider[4]: Through research on question generation scripts, it is found that a
 
 #### Plan execute
 1. Log[3]: Successfully built a suggestion interface implemented using Gradio to connect two neural networks.
+
+### 2024-03-08:
+
+---
+
+#### Plan Created
+Plan Name[5]: Implementing NLP: Implement python to call swi-prolog to perform fact writing and comprehensive query (supports queries of various attributes and idle attribute modes).
+Consider[5]: The implementation should write facts based on object attributes and relative positions, and should adapt the program in question json to ensure that the NLP output results can be used by Prolog.
+
+---
+
+#### Plan execute
+1. Log[5]: Implemented interface to prolog and made the interface OOP.
