@@ -188,3 +188,4 @@ Now I need to understand the meaning of each programe component type:
 
 ### Plan execute
 1. Log[5]: Basically, structured questions have been connected to ILP, but a lot of debugging is still needed to improve the code.
+2. Log[5]: Improve the ILP calculation code and achieve 100% accuracy.

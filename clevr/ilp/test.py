@@ -135,6 +135,12 @@ def run_query(engine: Engine, postprocess_program: dict):
                 return len(result_1) < len(result_2) if type(result_1) == list else result_1 < result_2
             elif postprocess_program['type'] == 'greater_than':
                 return len(result_1) > len(result_2) if type(result_1) == list else result_1 > result_2
+            elif postprocess_program['type'] == 'intersect':
+                if type(result_1) == list and type(result_2) == list:
+                    return list(set(result_1).intersection(set(result_2)))
+            elif postprocess_program['type'] == 'union':
+                if type(result_1) == list and type(result_2) == list:
+                    return list(set(result_1).union(set(result_2)))
         elif len(postprocess_program["_inputs"]) == 1:
             result = run_query(engine, postprocess_program["_inputs"][0])
             if postprocess_program['type'] == 'count':
@@ -172,6 +178,9 @@ def run_query(engine: Engine, postprocess_program: dict):
             f = postprocess_program['filter']
             result = ['Name']
             for filter_ in f:
+                if '_inputs' in filter_:
+                    result = run_query(engine, filter_)
+                    continue
                 if 'type' not in filter_:
                     _result = []
                     for item in result:
@@ -248,8 +257,8 @@ class MainTest(unittest.TestCase):
         self.assertEqual(True, True)
 
     def test_scene(self):
-        scene, question = load_scene(r'D:\projects\IndividualProject\clevr\Dataset Generation\output\clevr_scenes.json',
-                                     r'D:\projects\IndividualProject\clevr\clevr-dataset-gen\question_generation\questions_t.json')
+        scene, question = load_scene(r'clevr/test_data/clevr_scenes.json',
+                                     r'clevr/test_data/questions_t.json')
         logger.info(f'Scene: {scene}')
         logger.info(f'Question: {question}')
         rules = []
@@ -273,8 +282,8 @@ class MainTest(unittest.TestCase):
 
     def test_engine(self):
         engine = Engine()
-        scene, question = load_scene(r'D:\projects\IndividualProject\clevr\Dataset Generation\output\clevr_scenes.json',
-                                     r'D:\projects\IndividualProject\clevr\clevr-dataset-gen\question_generation\questions_t.json')
+        scene, question = load_scene(r'../test_data/clevr_scenes.json',
+                                     r'../test_data/questions_t.json')
         # logger.info(f'Scene: \n{json.dumps(question, indent=4)}')
         engine.auto_write(scene['objects'], scene['relationships'])
         result_1 = engine.query(material="rubber", shape="sphere")
@@ -285,7 +294,7 @@ class MainTest(unittest.TestCase):
         self.assertEqual(True, True)
 
     def test_list_all_component(self):
-        q_path = r'D:\projects\IndividualProject\clevr\clevr-dataset-gen\question_generation\questions_t.json'
+        q_path = r'../test_data/questions_t.json'
         logger.info(f'Loading questions from: {q_path}')
         with open(q_path, 'r') as f:
             questions = json.load(f)['questions']
@@ -304,7 +313,7 @@ class MainTest(unittest.TestCase):
         self.assertEqual(True, True)
 
     def test_example_question(self):
-        q_path = r'D:\projects\IndividualProject\clevr\clevr-dataset-gen\question_generation\questions_t.json'
+        q_path = r'../test_data/questions_t.json'
         logger.info(f'Loading questions from: {q_path}')
         with open(q_path, 'r') as f:
             questions = json.load(f)['questions']
@@ -317,7 +326,7 @@ class MainTest(unittest.TestCase):
         self.assertEqual(True, True)
 
     def test_count_question(self):
-        q_path = r'D:\projects\IndividualProject\clevr\clevr-dataset-gen\question_generation\questions_t.json'
+        q_path = r'../test_data/questions_t.json'
         logger.info(f'Loading questions from: {q_path}')
         with open(q_path, 'r') as f:
             questions = json.load(f)['questions']
@@ -335,7 +344,7 @@ class MainTest(unittest.TestCase):
         self.assertEqual(True, True)
 
     def test_merge_program(self):
-        q_path = r'D:\projects\IndividualProject\clevr\clevr-dataset-gen\question_generation\questions_t.json'
+        q_path = r'../test_data/questions_t.json'
         logger.info(f'Loading questions from: {q_path}')
         with open(q_path, 'r') as f:
             questions = json.load(f)['questions']
@@ -353,7 +362,7 @@ class MainTest(unittest.TestCase):
 
     def test_target_program(self):
         # 33589
-        q_path = r'D:\projects\IndividualProject\clevr\clevr-dataset-gen\question_generation\questions_t.json'
+        q_path = r'../test_data/questions_t.json'
         logger.info(f'Loading questions from: {q_path}')
         with open(q_path, 'r') as f:
             questions = json.load(f)['questions']
@@ -369,8 +378,8 @@ class MainTest(unittest.TestCase):
 
     def test_run_question(self):
         engine = Engine()
-        scene, question = load_scene(r'D:\projects\IndividualProject\clevr\Dataset Generation\output\clevr_scenes.json',
-                                     r'D:\projects\IndividualProject\clevr\clevr-dataset-gen\question_generation\questions_t.json', 56)
+        scene, question = load_scene(r'../test_data/clevr_scenes.json',
+                                     r'../test_data/questions_t.json', 70)
         # logger.info(f'Scene: \n{json.dumps(question, indent=4)}')
         engine.auto_write(scene['objects'], scene['relationships'])
         program = question['program']
@@ -385,13 +394,13 @@ class MainTest(unittest.TestCase):
     def test_run_questions(self):
         task_result = []
         engine = Engine()
-        for i in range(100):
+        for i in range(50, 100):
             try:  # 56, 58, 59, 64, 65, 67, 68, 69, 70, 71
                 if i == 10:
                     pass
                 logger.warning(f'Running question: {i}')
-                scene, question = load_scene(r'D:\projects\IndividualProject\clevr\Dataset Generation\output\clevr_scenes.json',
-                                             r'D:\projects\IndividualProject\clevr\clevr-dataset-gen\question_generation\questions_t.json', i)
+                scene, question = load_scene(r'../test_data/clevr_scenes.json',
+                                             r'../test_data/questions_t.json', i)
                 engine.auto_write(scene['objects'], scene['relationships'])
                 program = question['program']
                 merged_program = program_merge_dfs(program)
