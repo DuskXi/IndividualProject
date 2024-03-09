@@ -25,7 +25,7 @@ def set_relationship(engine: Prolog, adj_matrix, object_list, direction="left"):
         for j in range(len(object_list)):
             if adj_matrix[i][j] == 1:
                 prolog_str = f'relationship({object_list[i]["name"]}, {object_list[j]["name"]}, {direction})'
-                logger.debug(f'Asserting: {prolog_str}')
+                # logger.debug(f'Asserting: {prolog_str}')
                 engine.assertz(prolog_str)
                 t.append(prolog_str)
 
@@ -64,6 +64,8 @@ class Engine:
         self.rules = []
 
     def reset(self):
+        for rule in self.rules:
+            self.engine.retractall(rule)
         del self.engine
         self.engine = Prolog()
         self.rules = []
@@ -82,3 +84,15 @@ class Engine:
 
     def query(self, name="Name", size="_", material="_", color="_", shape="_", direction="_"):
         return query(self.engine, name, size, material, color, shape, direction)
+
+    def query_object(self, name="Name", size="_", material="_", color="_", shape="_"):
+        prolog_str = f'object({name}, {size}, {material}, {color}, {shape}).'
+        logger.debug(f'Query: {prolog_str}')
+        result = list(self.engine.query(prolog_str))
+        return result
+
+    def query_same_attr(self, name="Name", size="_", material="_", color="_", shape="_"):
+        prolog_str = f'object({name}, {size}, {material}, {color}, {shape}), object(Name, {size}, {material}, {color}, {shape}).'
+        logger.debug(f'Query: {prolog_str}')
+        result = list(self.engine.query(prolog_str))
+        return result

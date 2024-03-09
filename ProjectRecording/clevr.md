@@ -20,7 +20,6 @@ Obtaining the bounding box of an object in the Clevr dataset does not require ma
 
 ---
 
-
 ### 2024-02-22:
 
 ---
@@ -164,3 +163,28 @@ Consider[5]: The implementation should write facts based on object attributes an
 
 #### Plan execute
 1. Log[5]: Implemented interface to prolog and made the interface OOP.
+
+### 2024-03-09:
+
+---
+
+#### Plan Miscellaneous notes
+
+#### Plan[5]:
+
+---
+
+
+In the questions json file, for each question, there are some programe data can convert to ILP query
+Now I need to understand the meaning of each programe component type:
+- `query__`: The query type, such as `query_color`. In fact, this type of component mean convert the data type, such as convert the object to their attribute(color, shape, etc.)
+- `equal_`: The equal type, such as `equal_shape`. In fact, this type of component is a comparison operation, such as compare the shape of two data(such as object, color, material or number).
+- `same_`: The same type, such as `same_color`. In fact, this type of component is a comparison operation. currently I don't know the difference between `equal_` and `same_`.
+- `filter_`: The filter type, such as `filter_color`. In fact, this type of component is a filter operation, such as filter the data by their attribute(color, shape, etc.)
+- `less_than`: This is a unique type, it is a comparison operation, such as compare the number of objects.
+- `larger_than`: This is a unique type, it is a comparison operation, such as compare the number of objects.
+
+---
+
+### Plan execute
+1. Log[5]: Basically, structured questions have been connected to ILP, but a lot of debugging is still needed to improve the code.
