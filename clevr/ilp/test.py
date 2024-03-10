@@ -257,8 +257,8 @@ class MainTest(unittest.TestCase):
     #     self.assertEqual(True, True)
 
     def test_scene(self):
-        scene, question = load_scene(r'clevr/test_data/clevr_scenes.json',
-                                     r'clevr/test_data/questions_t.json')
+        scene, question = load_scene(r'../test_data/clevr_scenes.json',
+                                     r'../test_data/questions_t.json')
         # logger.info(f'Scene: {scene}')
         # logger.info(f'Question: {question}')
         rules = []
