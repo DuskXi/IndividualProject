@@ -1,4 +1,4 @@
-loguru==0.7.2
-numpy==1.24.0
-pandas==2.2.1
-pyswip==0.2.11
+loguru
+numpy
+pandas
+pyswip
