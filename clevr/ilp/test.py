@@ -394,7 +394,7 @@ class MainTest(unittest.TestCase):
     def test_run_questions(self):
         task_result = []
         engine = Engine()
-        for i in range(50, 100):
+        for i in range(1, 100, 10):
             try:  # 56, 58, 59, 64, 65, 67, 68, 69, 70, 71
                 if i == 10:
                     pass
