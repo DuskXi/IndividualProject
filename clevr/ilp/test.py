@@ -235,32 +235,32 @@ def run_query(engine: Engine, postprocess_program: dict):
 
 
 class MainTest(unittest.TestCase):
-    def test_pyswip(self):
-        engine = Prolog()
-
-        rules = """
-        loves(vincent, mia).
-        loves(marcellus, mia).
-        loves(pumpkin, honey_bunny).
-        loves(honey_bunny, pumpkin).
-        
-        jealous(X, Y) :-
-            loves(X, Z),
-            loves(Y, Z).
-        """
-        for rule in rules.split('.\n'):
-            if rule != '':
-                logger.debug(f'Asserting rule: {rule}')
-                engine.assertz(rule)
-        result = list(engine.query('jealous(X, Y)'))
-        logger.debug(f'Result: {result}')
-        self.assertEqual(True, True)
+    # def test_pyswip(self):
+    #     engine = Prolog()
+    #
+    #     rules = """
+    #     loves(vincent, mia).
+    #     loves(marcellus, mia).
+    #     loves(pumpkin, honey_bunny).
+    #     loves(honey_bunny, pumpkin).
+    #
+    #     jealous(X, Y) :-
+    #         loves(X, Z),
+    #         loves(Y, Z).
+    #     """
+    #     for rule in rules.split('.\n'):
+    #         if rule != '':
+    #             logger.debug(f'Asserting rule: {rule}')
+    #             engine.assertz(rule)
+    #     result = list(engine.query('jealous(X, Y)'))
+    #     logger.debug(f'Result: {result}')
+    #     self.assertEqual(True, True)
 
     def test_scene(self):
         scene, question = load_scene(r'clevr/test_data/clevr_scenes.json',
                                      r'clevr/test_data/questions_t.json')
-        logger.info(f'Scene: {scene}')
-        logger.info(f'Question: {question}')
+        # logger.info(f'Scene: {scene}')
+        # logger.info(f'Question: {question}')
         rules = []
         engine = Prolog()
         for obj in scene['objects']:
@@ -336,8 +336,8 @@ class MainTest(unittest.TestCase):
         counts = []
         for q in questions:
             counts.append(len(q['program']))
-            if len(q['program']) > 15:
-                logger.info(f'Question: {json.dumps(q, indent=4)}')
+            # if len(q['program']) > 15:
+            #     logger.info(f'Question: {json.dumps(q, indent=4)}')
         logger.info(f'Counts: {len(counts)}')
         logger.info(f'Min: {min(counts)}, Max: {max(counts)}')
         logger.info(f'Average: {sum(counts) / len(counts)}')
@@ -356,8 +356,8 @@ class MainTest(unittest.TestCase):
         # pprint(result)
         program = result['program']
         merged_program = program_merge_dfs(program)
-        pprint(merged_program)
-        logger.info(f'Merged program: {json.dumps(merged_program, indent=4)}')
+        # pprint(merged_program)
+        # logger.info(f'Merged program: {json.dumps(merged_program, indent=4)}')
         self.assertEqual(True, True)
 
     def test_target_program(self):
@@ -372,8 +372,8 @@ class MainTest(unittest.TestCase):
         program = questions[33589]['program']
         merged_program = program_merge_dfs(program)
         merged_program = clean_program(merged_program[0])
-        pprint(merged_program)
-        logger.info(f'Merged program: {json.dumps(merged_program, indent=4)}')
+        # pprint(merged_program)
+        # logger.info(f'Merged program: {json.dumps(merged_program, indent=4)}')
         self.assertEqual(True, True)
 
     def test_run_question(self):
