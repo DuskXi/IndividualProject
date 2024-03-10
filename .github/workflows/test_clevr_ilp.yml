@@ -1,0 +1,37 @@
+name: Python Clevr ILP Test CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python 3.10.x
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.10.x'
+
+      - name: Install SWI-Prolog
+        run: |
+          sudo apt-get install software-properties-common
+          sudo apt-add-repository ppa:swi-prolog/stable
+          sudo apt-get update
+          sudo apt-get install swi-prolog
+        env:
+          SWI_HOME_DIR: /usr/lib/swi-prolog
+
+      - name: Install dependencies
+        run: |
+          cd clevr/ilp
+          pip install -r requirements.txt
+          pip install pytest
+
+      - name: Run tests
+        run: |
+          export SWI_HOME_DIR=/usr/lib/swi-prolog
+          cd clevr/ilp
+          python -m unittest

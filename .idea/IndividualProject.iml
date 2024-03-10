@@ -5,6 +5,7 @@
       <sourceFolder url="file://$MODULE_DIR$/clevr/Dataset Generation" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/clevr/intergrated_demo" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/clevr/location_part" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/clevr/ilp" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/clevr/Dataset Generation/clevr_old_image_generation" />
       <excludeFolder url="file://$MODULE_DIR$/clevr/clevr-dataset-gen" />
       <excludeFolder url="file://$MODULE_DIR$/data" />
