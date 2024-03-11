@@ -32,6 +32,13 @@
 - 结果分析：模型的准确率达到了97%，可以认为是成功的，原因嘛，大概率是因为根据包围框数据计算关系，或则说在一个指定方向上，对于其他几个物体是否存在这个方向的关系。是一个复杂线性映射，并没有逻辑推理关系。
 - 实验时间：2024-03-06
 
+### 实验: 尝试直接将问题用线性网络处理成结构化问题
+
+- 实验概要：主要尝试将分词后的文本问题直接经过线性网络处理输出为结构化的问题以供ILP使用
+- 实验结果：失败，准确率仅20%
+- 结果分析：可能需要序列网络
+- 实验时间：2024-03-11
+
 # English Version
 
 ## Experiment log
@@ -62,3 +69,11 @@
   - During model training, I found that the pure FC-CNN structure seems to be a bit unstable and is very sensitive to training hyperparameters.
   - After adding dropout and BatchNorm2d layers, an accuracy of 85% can be achieved
   - Don’t use CrossEntropyLoss lightly, use MSE more often, the accuracy is now as high as 95%
+
+
+### Experiment: Try to directly use a linear network to process the problem into a structured problem
+
+- Experiment summary: The main attempt is to directly process the text questions after word segmentation through linear network processing and output them into structured questions for ILP use.
+- Experiment result: Failure, accuracy rate is only 20%
+- Result analysis: sequence network may be needed
+- Experiment time: 2024-03-11
