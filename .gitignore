@@ -5,3 +5,5 @@
 /clevr/clevr-dataset-gen/
 /clevr/Dataset Generation/output/
 /clevr/Dataset Generation/config.json
+/clevr/cv_part/*.pth
+/clevr/location_part/model
