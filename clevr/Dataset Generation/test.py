@@ -448,7 +448,7 @@ class DatasetGeneration(unittest.TestCase):
         self.assertEqual(True, True)
 
     def test_convert_scene(self):
-        scene_to_clevr_scene("output/scenes.json", "output/clevr_scenes.json")
+        scene_to_clevr_scene("output/scenes.json", "output/clevr_scenes_2.json")
         self.assertEqual(True, True)
 
 

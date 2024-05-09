@@ -80,6 +80,7 @@ def predict(object_detector, relationship_detector, image, labels_class):
 
 
 def main():
+    print("init")
     relationship_path = r"D:\projects\IndividualProject\clevr\location_part\model\model_40_acc_97.pth"
     fasterrcnn_path = r"D:\projects\IndividualProject\clevr\cv_part\model_4_acc_98.pth"
 

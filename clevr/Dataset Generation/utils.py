@@ -1,3 +1,4 @@
+import datetime
 import json
 import os.path
 
@@ -42,5 +43,7 @@ def scene_to_clevr_scene(src, dest, encoding='utf-8'):
             obj['size'] = obj['size_name']
             obj['3d_coords'] = obj['location']
 
+    data['info'] = {"split": "train", "license": "Creative Commons Attribution (CC BY 4.0)", "version": "1.0", "date": datetime.datetime.now().strftime("%m/%d/%Y")}
+
     with open(dest, "w", encoding=encoding) as f:
-        json.dump(data, f)
+        json.dump(data, f, indent=2)

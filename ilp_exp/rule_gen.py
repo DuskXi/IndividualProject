@@ -160,12 +160,7 @@ class RelatedRuleSingle:
                 self.object_in_condition(scene, relation_adj_list, idx_object, rule_seq[1:], visited + [idx_object], no_visited) if len(rule_seq) > 1 else True)
         elif isinstance(rule, RelationCondition):
             adj_list = relation_adj_list[rule.direction]
-            # connected = [i for i in range(len(adj_list[idx_object])) if adj_list[idx_object][i] == 1]
             connected = adj_list[idx_object]
-            # for i in range(len(adj_list[idx_object])):
-            #     connections = adj_list[idx_object]
-            #     if i in connections:
-            #         connected.append(i)
             if no_visited:
                 connected = list(filter(lambda x: x not in visited, connected))
             for i in connected:

@@ -1,3 +1,4 @@
+import json
 import unittest
 
 from loguru import logger
@@ -5,7 +6,7 @@ from rich.logging import RichHandler
 from torch.utils.data import DataLoader
 from tqdm.rich import tqdm
 
-from clevr.nlp_part.dataset import ClevrQuestionDataset, program_types
+from clevr.nlp_part.dataset import ClevrQuestionDataset, program_types, ClevrQuestionS2SDataset
 from model import *
 
 logger.configure(handlers=[{"sink": RichHandler(), "format": "{message}"}])
@@ -96,6 +97,30 @@ class NLPTest(unittest.TestCase):
                 progress.set_description(f'epoch {epoch} loss: {loss.item()}')
 
         self.assertEqual(True, True)
+
+    def test_data(self):
+        def function_to_str(f):
+            value_str = ''
+            if f['value_inputs']:
+                value_str = '[%s]' % ','.join(f['value_inputs'])
+            return '%s%s' % (f['type'], value_str)
+
+        def list_to_str(program_list):
+            return ' '.join(function_to_str(f) for f in program_list)
+
+        with open('../test_data/questions_t.json', 'r') as f:
+            d = json.load(f)
+        questions = d['questions']
+        q = questions[0]
+        program = q['program']
+        program_str = list_to_str(program)
+        self.assertEqual(True, True)
+
+    def test_s2s_dataset(self):
+        dataset = ClevrQuestionS2SDataset('../test_data/questions_t.json')
+        question_tensor, program_tensor = dataset[0]
+
+        self.assertEqual(len(question_tensor), dataset.max_seq_len)
 
 
 if __name__ == '__main__':

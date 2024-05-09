@@ -1,8 +1,10 @@
 import json
 import os
 import shutil
+import threading
 
 from multiprocessing import current_process
+from multiprocessing.pool import ThreadPool
 
 if current_process().name == 'MainProcess':
     import bpy
@@ -79,14 +81,26 @@ class Generator:
         objects = [bpy.data.objects[obj.name] for obj in self.scene.objects]
         mvp_matrices = [self.calculate_mvp(obj) for obj in objects]
         timer.stop().print("Prepare simple rasterization data", level="debug").reset().start()
-        object_reverse_occlusion_rate = simple_rasterization(objects, mvp_matrices, sample_size=32)
-        timer.stop().print("Rasterization", level="debug").reset().start()
+        # object_reverse_occlusion_rate = simple_rasterization(objects, mvp_matrices, sample_size=32)
+        pool = ThreadPool(processes=1)
+
+        def execute_simple_rasterization(o, m, sample_size):
+            timer_rasterization = Timer().start()
+            result = simple_rasterization(o, m, sample_size)
+            timer_rasterization.stop().print("Rasterization", level="debug").reset().start()
+            return result
+
+        async_result = pool.apply_async(execute_simple_rasterization, (objects, mvp_matrices, 32))
+        # thread_rasterization = threading.Thread(target=simple_rasterization, args=(objects, mvp_matrices, 32))
+        # timer.stop().print("Rasterization", level="debug").reset().start()
 
         self.render.set_render_output(output_path, file_format)
 
         self.render.render_scene()
         timer.stop().print("Run Render", level="debug").reset().start()
         bounding_boxes = [calculate_bounding_box_dict(obj, mvp_matrix, reverseY=True) for i, (obj, mvp_matrix) in enumerate(zip(objects, mvp_matrices))]
+        async_result.wait()
+        object_reverse_occlusion_rate = async_result.get()
         timer.stop().print("Calculate bounding boxes", level="debug").reset().start()
 
         return object_reverse_occlusion_rate, bounding_boxes
@@ -167,8 +181,16 @@ class Generator:
             "scenes": []
         }
         if os.path.exists(os.path.join(self.config.output_dir, "scenes.json")):
-            with open(os.path.join(self.config.output_dir, "scenes.json"), "r") as f:
-                scenes = json.load(f)
+            try:
+                with open(os.path.join(self.config.output_dir, "scenes.json"), "r") as f:
+                    scenes = json.load(f)
+                    if "scenes" not in scenes:
+                        raise json.JSONDecodeError
+            except json.JSONDecodeError:
+                logger.warning("Failed to load scenes.json")
+                shutil.copy(os.path.join(self.config.output_dir, "scenes_bak.json"), os.path.join(self.config.output_dir, "scenes.json"))
+                with open(os.path.join(self.config.output_dir, "scenes.json"), "r") as f:
+                    scenes = json.load(f)
         start_index = len(scenes["scenes"])
         for i in tqdm(range(start_index, self.config.num_images), initial=start_index, total=self.config.num_images, desc="Rendering"):
             self.render.set_render_args(self.config.engine, self.config.resolution, self.config.resolution_percentage, self.config.samples, self.config.use_gpu, self.config.use_adaptive_sampling)
@@ -192,7 +214,8 @@ class Generator:
                 self.render = Render(self.config.scene_blend_file, self.config.object_dir, self.config.material_dir, blender_log_suppress=self.config.blender_log_suppress)
                 self.render.init_render()
                 # copy scenes to bak
-                shutil.copy(os.path.join(self.config.output_dir, "scenes.json"), os.path.join(self.config.output_dir, "scenes_bak.json"))
+                if os.path.exists(os.path.join(self.config.output_dir, "scenes.json")):
+                    shutil.copy(os.path.join(self.config.output_dir, "scenes.json"), os.path.join(self.config.output_dir, "scenes_bak.json"))
                 with open(os.path.join(self.config.output_dir, "scenes.json"), "w") as f:
                     json_str = json.dumps(scenes, indent=4)
                     f.write(json_str)

@@ -7,6 +7,7 @@ import numpy as np
 from loguru import logger
 from prolog import *
 
+logger.add("logdir/log_{time}.log")
 if os.environ.get('SWI_HOME_DIR', None) is None:
     raise Exception('SWI_HOME_DIR environment variable must be set')
 from pyswip import Prolog

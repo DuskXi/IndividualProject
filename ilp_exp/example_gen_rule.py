@@ -132,8 +132,14 @@ def main(args):
         with open(f"{args.output}/{args.name}.f", 'w') as f:
             f.write("\n".join(negative))
     elif args.type == 'random_rule':
-        positive, negative, positive_index, negative_index = split_by_rule(examples_scene, Rule(left=Side(shape=['cube'], material=['rubber'], number=0, number_limit_type='more'),
-                                                                                                right=Side(shape=['cylinder'], material=['metal'], number=0, number_limit_type='more')))
+        logger.info("Random Rule")
+        rule = Rule(left=Side(shape=['cube'], material=['rubber'], number=0, number_limit_type='more'),
+                    right=Side(shape=['cylinder'], material=['metal'], number=0, number_limit_type='more'))
+        # rule = Rule(left=Side(shape=['cube'], material=['rubber'], number=1, number_limit_type='equal'),
+        #             right=Side(shape=['cube'], material=['rubber'], number=2, number_limit_type='equal'))
+        logger.info(f"Rule left: {rule.left.to_prolog_query('A')}")
+        logger.info(f"Rule right: {rule.right.to_prolog_query('B')}")
+        positive, negative, positive_index, negative_index = split_by_rule(examples_scene, rule)
         positive = list(map(lambda x: f"true_class({x}).", positive))
         negative = list(map(lambda x: f"true_class({x}).", negative))
 
@@ -151,6 +157,7 @@ def main(args):
             f.write("\n".join(negative))
 
     elif args.type == 'random_rule_relation':
+        logger.info("Random Rule Relation")
         # rule = RelatedRuleSingle(
         #     [
         #         Side(material=['rubber']),
@@ -185,6 +192,7 @@ def main(args):
         with open(f"{args.output}/{args.name}.n", 'w') as f:
             f.write("\n".join(negative))
     elif args.type == 'rand_rule_batch':
+        logger.info("Random Rule Batch")
         split_ratio_threshold = 0.3
         manager = multiprocessing.Manager()
         lock = manager.Lock()
