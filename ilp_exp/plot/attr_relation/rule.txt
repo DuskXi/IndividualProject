@@ -1,0 +1,5 @@
+                    INFO     query_object(A) :-                                                                                                                                                                                                                                                                                                           example_gen_rule.py:180
+                                     contains(B, A), material(B, metal), left(B, C), shape(C, cube), material(C, rubber)
+                    INFO     query_object(A) :-                                                                                                                                                                                                                                                                                                           example_gen_rule.py:180
+                                     contains(B, A), material(B, metal), left(B, C), shape(C, cube), material(C, metal)
+                    INFO     Pos: 3914, Neg: 2086

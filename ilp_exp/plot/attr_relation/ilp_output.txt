@@ -1,0 +1,16 @@
+[theory]
+
+[Rule 1] [Pos cover = 3914 Neg cover = 0]
+true_class(A) :-
+   contains(B,A), has_shape(B,cube), left_of(B,C), has_material(C,metal).
+
+[Training set performance]
+            Actual
+         +            -
+     + 3914          0          3914
+Pred
+     -   0          2086        2086
+
+       3914        2086        6000
+
+Accuracy = 1

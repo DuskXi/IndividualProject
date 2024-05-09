@@ -1,0 +1,19 @@
+[Rule 1] [Pos cover = 3 Neg cover = 0]
+true_class(A) :-
+   contains(B,A), has_shape(B,cube), has_color(B,yellow), has_size(B,large).
+[positive examples covered]
+true_class(example_5).
+true_class(example_27).
+true_class(example_38).
+[negative examples covered]
+
+[Training set performance]
+          Actual
+        +          -
+     +  3          0          3
+Pred
+     -  6         25        31
+
+        9         25        34
+
+Accuracy = 0.8235294117647058

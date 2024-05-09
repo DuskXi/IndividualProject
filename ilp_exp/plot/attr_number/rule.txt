@@ -1,0 +1,3 @@
+                    INFO     Rule left: ['shape(A, cube), material(A, rubber)']                                                                                                                                                                                                                                                                           example_gen_rule.py:140
+                    INFO     Rule right: ['shape(B, cube), material(B, rubber)']
+                    INFO     Left: 2378, Right: 943, All: 2679

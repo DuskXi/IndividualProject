@@ -1,0 +1,16 @@
+[theory]
+
+[Rule 1] [Pos cover = 1627 Neg cover = 0]
+true_class(A) :-
+   contains(B,A), has_shape(B,cylinder), has_material(B,metal).
+
+[Training set performance]
+            Actual
+         +            -
+     + 1627          0          1627
+Pred
+     -   0          1620        1620
+
+       1627        1620        3247
+
+Accuracy = 1
